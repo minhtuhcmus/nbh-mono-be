@@ -1,0 +1,26 @@
+scalar Time
+
+type Query {
+#  role(roleID: Int!): OverviewRole!
+#  roles(isActive: Boolean): [OverviewRole!]!
+#  labels(mainLabelID: Int): [OverviewLabel!]!
+#  user(id: Int!): OverviewUser!
+#  users(pagination: Pagination!): [OverviewUser!]!
+#  item(id: Int!): OverviewItem!
+  items(pagination: Pagination!): [OverviewItem!]
+  itemAttributes: [OverviewLabel!]
+#  me: OverviewUser!
+}
+
+type Mutation {
+#  createRole(newRole: NewRole!): OverviewRole!
+#  disableRole(roleID: Int!): Boolean!
+#  label(newLabel: NewLabel!): OverviewLabel!
+#  disableLabel(labelID: Int!): Boolean!
+#  disableLabels(labelID: Int!): Boolean!
+#  signUp(newUser: NewUser!): String!
+#  signIn(username: String!, password: String!): String!
+  item(newItem: NewItem!): OverviewItem!
+#  user(newUser: NewUser!): OverviewUser!
+#  disableUser(userID: Int!): Boolean!
+}

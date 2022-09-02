@@ -1,0 +1,11 @@
+type OverviewRole {
+  id: Int!
+  label: String!
+  description: String
+}
+
+input NewRole {
+  label: String!
+  description: String
+  active: Boolean!
+}

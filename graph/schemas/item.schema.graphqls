@@ -1,0 +1,35 @@
+input NewItem {
+   name: String!
+   searchKeys: String
+   attributes: [Int!]
+   images:[Int!]
+}
+
+type OverviewImage {
+   id: Int!
+   link: String!
+}
+
+type DetailItem {
+   id: Int!
+   name: String!
+   attributes: [OverviewLabel!]
+   images: [OverviewImage!]
+}
+
+type OverviewItem {
+   id: Int!
+   name: String!
+   avatar: OverviewImage
+}
+
+type NewCollection {
+   name: String!
+}
+
+type OverviewCollection {
+   id: Int!
+   name: String!
+   order: Int!
+   totalItem: Int!
+}

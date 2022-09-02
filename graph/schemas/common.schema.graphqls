@@ -1,0 +1,10 @@
+input ItemFilter {
+    attributes: [Int!]
+}
+
+input Pagination {
+    page: Int!
+    size: Int!
+    keyword: String!
+    filter: ItemFilter
+}

@@ -1,0 +1,13 @@
+type OverviewLabel {
+  id: Int!
+  code: String!
+  value: String!
+  subLabels: [OverviewLabel!]
+}
+
+input NewLabel {
+  code: String!
+  value: String!
+  fkLabel: Int
+  active: Boolean!
+}

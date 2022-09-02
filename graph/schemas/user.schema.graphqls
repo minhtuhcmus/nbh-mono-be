@@ -1,0 +1,25 @@
+type OverviewUser {
+  id: Int!
+  username: String!
+  active: Boolean!
+  displayName: String!
+  address: String!
+  phoneNumber: String!
+  countryCode: OverviewLabel!
+  role: OverviewRole!
+  status: OverviewLabel!
+  createdAt: Time!
+  updatedAt: Time!
+}
+
+input NewUser {
+  username: String!
+  password: String!
+  active: Boolean!
+  displayName: String!
+  address: String!
+  phoneNumber: String!
+  countryCode: Int!
+  role: Int!
+  status: Int!
+}
