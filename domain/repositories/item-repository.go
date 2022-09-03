@@ -41,7 +41,7 @@ func (i *ItemRepository) GetItemByID(
 func (i *ItemRepository) SearchItemByKeyword(
 	ctx context.Context,
 	keyword string,
-	items []*models.Item,
+	items *[]*models.Item,
 ) error {
 	err := datastore.
 		GetDB().
@@ -59,16 +59,29 @@ func (i *ItemRepository) SearchItemByKeyword(
 func (i *ItemRepository) SearchItemByFilter(
 	ctx context.Context,
 	pagination *model.Pagination,
-	items []*models.Item,
+	items *[]*models.Item,
 ) error {
-	err := datastore.
-		GetDB().
-		WithContext(ctx).
-		Raw("SELECT items.* "+
-			"FROM items i "+
-			"INNER JOIN item_attribute ia ON i.id = ia.fk_item "+
-			"WHERE ia.fk_label IN ? LIMIT ?, ?", pagination.Filter.Attributes, pagination.Page*pagination.Size, pagination.Size).
-		Scan(&items).Error
+	var err error
+	if pagination.Filter != nil {
+		err = datastore.
+			GetDB().
+			WithContext(ctx).
+			Raw("SELECT i.* "+
+				"FROM items i "+
+				"INNER JOIN item_attribute ia ON i.id = ia.fk_item "+
+				"WHERE ia.fk_label IN ? LIMIT ?, ?", pagination.Filter.Attributes, pagination.Page*pagination.Size, pagination.Size).
+			Scan(&items).Error
+	} else {
+		err = datastore.
+			GetDB().
+			WithContext(ctx).
+			Raw("SELECT i.* "+
+				"FROM items i "+
+				"INNER JOIN item_attribute ia ON i.id = ia.fk_item "+
+				"LIMIT ?, ?", pagination.Page*pagination.Size, pagination.Size).
+			Scan(&items).Error
+	}
+
 	if err != nil {
 		items = nil
 		return fmt.Errorf("error ItemRepository.SearchItemByKeyword %v", err)
@@ -79,15 +92,15 @@ func (i *ItemRepository) SearchItemByFilter(
 func (i *ItemRepository) GetAvatarOfItems(
 	ctx context.Context,
 	itemIds []int,
-	itemAvatars []*models.ItemAvatar,
+	itemAvatars *[]*models.ItemAvatar,
 ) error {
 	err := datastore.
 		GetDB().
 		WithContext(ctx).
 		Raw("SELECT items.id, images.id, images.link "+
 			"FROM items INNER JOIN item_image ON items.id = item_image.fk_item "+
-			"INNER JOIN item_image.fk_image = images.id "+
-			"WHERE item_image.is_avatar = TRUE AND items.id IN ?", itemIds).
+			"INNER JOIN images ON item_image.fk_image = images.id "+
+			"WHERE item_image.is_avatar = TRUE AND items.id IN ? ", itemIds).
 		Scan(&itemAvatars).Error
 	if err != nil {
 		itemAvatars = nil

@@ -12,6 +12,7 @@ CREATE TABLE `items` (
   name VARCHAR(20) NOT NULL UNIQUE,
   search_keys TEXT,
   description TEXT,
+  `order` INT NOT NULL,
   active BOOLEAN NOT NULL DEFAULT TRUE,
   FULLTEXT (`name`, `search_keys`, `description`)
 )ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 AUTO_INCREMENT=1;
@@ -20,6 +21,7 @@ DROP TABLE IF EXISTS `item_collection`;
 CREATE TABLE `item_collection`(
   fk_item INT NOT NULL,
   fk_collection INT NOT NULL,
+  `order` INT NOT NULL,
   active BOOLEAN NOT NULL DEFAULT TRUE,
   PRIMARY KEY (`fk_item`, `fk_collection`)
 )ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 AUTO_INCREMENT=1;
@@ -40,31 +42,31 @@ CREATE TABLE `item_image`(
   PRIMARY KEY (`fk_item`, `fk_image`)
 )ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 AUTO_INCREMENT=1;
 
-DELIMITER $$
-
-CREATE TRIGGER before_insert_allow_only_one_avatar_per_item
-  BEFORE INSERT ON stack_over_t FOR EACH ROW
-BEGIN
-  IF (SELECT COUNT(*) FROM `item_image`
-      WHERE fk_item=NEW.`fk_item` AND item_image.is_avatar = TRUE) > 0 AND NEW.`is_avatar` = TRUE
-          THEN
-               SIGNAL SQLSTATE '45000'
-      SET MESSAGE_TEXT = 'Cannot add or update row: only one avatar allowed per item';
-END IF;
-END;
-$$
-
-CREATE TRIGGER before_update_allow_only_one_avatar_per_item
-  BEFORE UPDATE ON item_image FOR EACH ROW
-BEGIN
-  IF (SELECT COUNT(*) FROM `item_image`
-      WHERE fk_item=NEW.`fk_item` AND item_image.is_avatar = TRUE) > 0 AND NEW.`is_avatar` = TRUE
-          THEN
-               SIGNAL SQLSTATE '45000'
-      SET MESSAGE_TEXT = 'Cannot add or update row: only one avatar allowed per item';
-END IF;
-END;
-$$
+-- DELIMITER $$
+--
+-- CREATE TRIGGER before_insert_allow_only_one_avatar_per_item
+--   BEFORE INSERT ON stack_over_t FOR EACH ROW
+-- BEGIN
+--   IF (SELECT COUNT(*) FROM `item_image`
+--       WHERE fk_item=NEW.`fk_item` AND item_image.is_avatar = TRUE) > 0 AND NEW.`is_avatar` = TRUE
+--           THEN
+--                SIGNAL SQLSTATE '45000'
+--       SET MESSAGE_TEXT = 'Cannot add or update row: only one avatar allowed per item';
+-- END IF;
+-- END;
+-- $$
+--
+-- CREATE TRIGGER before_update_allow_only_one_avatar_per_item
+--   BEFORE UPDATE ON item_image FOR EACH ROW
+-- BEGIN
+--   IF (SELECT COUNT(*) FROM `item_image`
+--       WHERE fk_item=NEW.`fk_item` AND item_image.is_avatar = TRUE) > 0 AND NEW.`is_avatar` = TRUE
+--           THEN
+--                SIGNAL SQLSTATE '45000'
+--       SET MESSAGE_TEXT = 'Cannot add or update row: only one avatar allowed per item';
+-- END IF;
+-- END;
+-- $$
 
 DROP TABLE IF EXISTS `labels`;
 CREATE TABLE `labels` (

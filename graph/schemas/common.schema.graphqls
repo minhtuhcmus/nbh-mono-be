@@ -3,8 +3,9 @@ input ItemFilter {
 }
 
 input Pagination {
+    collections: [Int!]
     page: Int!
     size: Int!
-    keyword: String!
+    keyword: String
     filter: ItemFilter
 }

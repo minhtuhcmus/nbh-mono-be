@@ -23,7 +23,7 @@ func (r *queryResolver) Items(ctx context.Context, pagination model.Pagination) 
 		return nil, fmt.Errorf("error queryResolver.Items %v", err)
 	}
 
-	return items, nil
+	return *items, nil
 }
 
 // ItemAttributes is the resolver for the itemAttributes field.
@@ -32,7 +32,7 @@ func (r *queryResolver) ItemAttributes(ctx context.Context) ([]*model.OverviewLa
 	if err != nil {
 		return nil, fmt.Errorf("error queryResolver.ItemAttributes %v", err)
 	}
-	return attributes, nil
+	return *attributes, nil
 }
 
 // Mutation returns generated.MutationResolver implementation.

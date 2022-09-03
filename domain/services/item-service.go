@@ -10,8 +10,8 @@ import (
 )
 
 type ItemService interface {
-	GetItems(ctx context.Context, filter *model.Pagination) ([]*model.OverviewItem, error)
-	GetItemAttribute(ctx context.Context) ([]*model.OverviewLabel, error)
+	GetItems(ctx context.Context, filter *model.Pagination) (*[]*model.OverviewItem, error)
+	GetItemAttribute(ctx context.Context) (*[]*model.OverviewLabel, error)
 }
 
 type itemService struct {
@@ -20,13 +20,17 @@ type itemService struct {
 	labelRepository      *repositories.LabelRepository
 }
 
-func (i itemService) GetItems(ctx context.Context, filter *model.Pagination) ([]*model.OverviewItem, error) {
+func (i itemService) GetItems(ctx context.Context, filter *model.Pagination) (*[]*model.OverviewItem, error) {
 	var items []*models.Item
 	var err error
-	if filter.Keyword != "" {
-		err = i.itemRepository.SearchItemByKeyword(ctx, filter.Keyword, items)
+	if filter.Keyword != nil {
+		err = i.itemRepository.SearchItemByKeyword(ctx, *filter.Keyword, &items)
 	} else {
-		err = i.itemRepository.SearchItemByFilter(ctx, filter, items)
+		if filter.Collections != nil {
+			err = i.collectionRepository.GetItemsInCollections(ctx, filter, &items)
+		} else {
+			err = i.itemRepository.SearchItemByFilter(ctx, filter, &items)
+		}
 	}
 	if err != nil {
 		return nil, fmt.Errorf("error itemService.GetItems %v", err)
@@ -39,7 +43,7 @@ func (i itemService) GetItems(ctx context.Context, filter *model.Pagination) ([]
 
 	var itemAvatars []*models.ItemAvatar
 
-	err = i.itemRepository.GetAvatarOfItems(ctx, itemIds, itemAvatars)
+	err = i.itemRepository.GetAvatarOfItems(ctx, itemIds, &itemAvatars)
 	if err != nil {
 		return nil, fmt.Errorf("error itemService.GetItems %v", err)
 	}
@@ -62,28 +66,28 @@ func (i itemService) GetItems(ctx context.Context, filter *model.Pagination) ([]
 		}
 	}
 
-	return overviewItems, nil
+	return &overviewItems, nil
 }
 
-func (i itemService) GetItemAttribute(ctx context.Context) ([]*model.OverviewLabel, error) {
+func (i itemService) GetItemAttribute(ctx context.Context) (*[]*model.OverviewLabel, error) {
 	var mainAttributes []*models.Label
-	err := i.labelRepository.FetchLabelByCode(ctx, constant.ITEM_ATTRIBUTE_CODES, mainAttributes)
+	err := i.labelRepository.FetchLabelByCode(ctx, constant.ITEM_ATTRIBUTE_CODES, &mainAttributes)
 	if err != nil {
 		return nil, fmt.Errorf("error itemService.GetItemAttribute %v", err)
 	}
 
 	var mainAttributeIds []int
-	for idx, mainAttr := range mainAttributes {
-		mainAttributeIds[idx] = mainAttr.ID
+	for _, mainAttr := range mainAttributes {
+		mainAttributeIds = append(mainAttributeIds, mainAttr.ID)
 	}
 
 	var subAttributes []*models.Label
-	err = i.labelRepository.GetAllSubAttributesOfGroups(ctx, mainAttributeIds, subAttributes)
+	err = i.labelRepository.GetAllSubAttributesOfGroups(ctx, mainAttributeIds, &subAttributes)
 	if err != nil {
 		return nil, fmt.Errorf("error itemService.GetItemAttribute %v", err)
 	}
 
-	var attrMap map[int][]*model.OverviewLabel
+	var attrMap = map[int][]*model.OverviewLabel{}
 
 	for _, subAttr := range subAttributes {
 		if attrMap[*subAttr.FkLabel] != nil {
@@ -108,16 +112,16 @@ func (i itemService) GetItemAttribute(ctx context.Context) ([]*model.OverviewLab
 
 	var resLabels []*model.OverviewLabel
 
-	for idx, mainAttrs := range mainAttributes {
-		resLabels[idx] = &model.OverviewLabel{
+	for _, mainAttrs := range mainAttributes {
+		resLabels = append(resLabels, &model.OverviewLabel{
 			ID:        mainAttrs.ID,
 			Code:      mainAttrs.Code,
 			Value:     mainAttrs.Value,
 			SubLabels: attrMap[mainAttrs.ID],
-		}
+		})
 	}
 
-	return resLabels, nil
+	return &resLabels, nil
 }
 
 func NewItemService(

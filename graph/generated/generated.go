@@ -467,9 +467,10 @@ var sources = []*ast.Source{
 }
 
 input Pagination {
+    collections: [Int!]
     page: Int!
     size: Int!
-    keyword: String!
+    keyword: String
     filter: ItemFilter
 }`, BuiltIn: false},
 	{Name: "../schemas/item.schema.graphqls", Input: `input NewItem {
@@ -4477,13 +4478,21 @@ func (ec *executionContext) unmarshalInputPagination(ctx context.Context, obj in
 		asMap[k] = v
 	}
 
-	fieldsInOrder := [...]string{"page", "size", "keyword", "filter"}
+	fieldsInOrder := [...]string{"collections", "page", "size", "keyword", "filter"}
 	for _, k := range fieldsInOrder {
 		v, ok := asMap[k]
 		if !ok {
 			continue
 		}
 		switch k {
+		case "collections":
+			var err error
+
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("collections"))
+			it.Collections, err = ec.unmarshalOInt2ᚕintᚄ(ctx, v)
+			if err != nil {
+				return it, err
+			}
 		case "page":
 			var err error
 
@@ -4504,7 +4513,7 @@ func (ec *executionContext) unmarshalInputPagination(ctx context.Context, obj in
 			var err error
 
 			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("keyword"))
-			it.Keyword, err = ec.unmarshalNString2string(ctx, v)
+			it.Keyword, err = ec.unmarshalOString2ᚖstring(ctx, v)
 			if err != nil {
 				return it, err
 			}

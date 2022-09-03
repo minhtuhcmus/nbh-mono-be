@@ -44,23 +44,22 @@ func (c *CollectionRepository) GetCollectionsInfo(
 	return nil
 }
 
-func (c *CollectionRepository) GetItemsInCollection(
+func (c *CollectionRepository) GetItemsInCollections(
 	ctx context.Context,
-	collectionID int,
-	items *[]models.Item,
-	offset, limit int,
+	pagination *model.Pagination,
+	items *[]*models.Item,
 ) error {
 	err := datastore.
 		GetDB().
 		WithContext(ctx).
 		Raw("SELECT * "+
 			"FROM items INNER JOIN item_collection ON item.id = item_collection.fk_item "+
-			"WHERE item_collection.fk_collection = ? AND active = TRUE "+
-			"LIMIT = ?, ?", collectionID, offset, limit).
+			"WHERE item_collection.fk_collection IN ? AND active = TRUE "+
+			"LIMIT ?, ?", pagination.Collections, pagination.Page*pagination.Size, pagination.Size).
 		Scan(&items).Error
 	if err != nil {
 		items = nil
-		return fmt.Errorf("error ItemRepository.GetItemByID %v", err)
+		return fmt.Errorf("error CollectionRepository.GetItemsInCollections %v", err)
 	}
 	return nil
 }

@@ -21,13 +21,14 @@ func NewLabelRepository() *LabelRepository {
 func (l *LabelRepository) FetchLabelByCode(
 	ctx context.Context,
 	code []string,
-	labels []*models.Label,
+	labels *[]*models.Label,
 ) error {
 	err := datastore.
 		GetDB().
 		WithContext(ctx).
 		Where("code IN ?", code).
 		Where("active = ?", true).
+		Order("id").
 		Find(&labels).Error
 	if err != nil {
 		labels = nil
@@ -39,15 +40,15 @@ func (l *LabelRepository) FetchLabelByCode(
 func (l *LabelRepository) GetAllSubAttributesOfGroups(
 	ctx context.Context,
 	groupIds []int,
-	labels []*models.Label,
+	labels *[]*models.Label,
 ) error {
 	err := datastore.
 		GetDB().
 		WithContext(ctx).
 		Raw("SELECT * "+
 			"FROM labels "+
-			"WHERE id IN ? "+
-			"AND fk_label IS NULL", groupIds).
+			"WHERE fk_label IN ? "+
+			"ORDER BY fk_label, labels.id", groupIds).
 		Scan(&labels).Error
 	if err != nil {
 		labels = nil
