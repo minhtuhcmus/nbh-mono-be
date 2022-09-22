@@ -5,11 +5,6 @@ input NewItem {
    images:[Int!]
 }
 
-type OverviewImage {
-   id: Int!
-   link: String!
-}
-
 type DetailItem {
    id: Int!
    name: String!

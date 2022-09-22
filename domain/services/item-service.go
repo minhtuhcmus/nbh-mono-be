@@ -12,12 +12,15 @@ import (
 type ItemService interface {
 	GetItems(ctx context.Context, filter *model.Pagination) (*[]*model.OverviewItem, error)
 	GetItemAttribute(ctx context.Context) (*[]*model.OverviewLabel, error)
+	CreateItem(ctx context.Context, itemDetail *model.NewItem) (*model.OverviewItem, error)
 }
 
 type itemService struct {
-	itemRepository       *repositories.ItemRepository
-	collectionRepository *repositories.CollectionRepository
-	labelRepository      *repositories.LabelRepository
+	itemRepository          *repositories.ItemRepository
+	collectionRepository    *repositories.CollectionRepository
+	labelRepository         *repositories.LabelRepository
+	itemAttributeRepository *repositories.ItemAttributeRepository
+	itemImageRepository     *repositories.ItemImageRepository
 }
 
 func (i itemService) GetItems(ctx context.Context, filter *model.Pagination) (*[]*model.OverviewItem, error) {
@@ -37,8 +40,8 @@ func (i itemService) GetItems(ctx context.Context, filter *model.Pagination) (*[
 	}
 
 	var itemIds []int
-	for idx, item := range items {
-		itemIds[idx] = item.ID
+	for _, item := range items {
+		itemIds = append(itemIds, item.ID)
 	}
 
 	var itemAvatars []*models.ItemAvatar
@@ -48,7 +51,7 @@ func (i itemService) GetItems(ctx context.Context, filter *model.Pagination) (*[
 		return nil, fmt.Errorf("error itemService.GetItems %v", err)
 	}
 
-	var itemAvatarMap map[int]*model.OverviewImage
+	itemAvatarMap := make(map[int]*model.OverviewImage)
 	for _, itemAvatar := range itemAvatars {
 		itemAvatarMap[itemAvatar.FkItem] = &model.OverviewImage{
 			ID:   itemAvatar.FkImage,
@@ -58,12 +61,12 @@ func (i itemService) GetItems(ctx context.Context, filter *model.Pagination) (*[
 
 	var overviewItems []*model.OverviewItem
 
-	for idx, item := range items {
-		overviewItems[idx] = &model.OverviewItem{
+	for _, item := range items {
+		overviewItems = append(overviewItems, &model.OverviewItem{
 			ID:     item.ID,
 			Name:   item.Name,
 			Avatar: itemAvatarMap[item.ID],
-		}
+		})
 	}
 
 	return &overviewItems, nil
@@ -124,14 +127,68 @@ func (i itemService) GetItemAttribute(ctx context.Context) (*[]*model.OverviewLa
 	return &resLabels, nil
 }
 
+func (i itemService) CreateItem(ctx context.Context, itemDetail *model.NewItem) (*model.OverviewItem, error) {
+	newItem := &models.Item{
+		Name:       itemDetail.Name,
+		SearchKeys: *itemDetail.SearchKeys,
+	}
+
+	err := i.itemRepository.CreateItem(ctx, newItem)
+	if err != nil {
+		return nil, fmt.Errorf("error itemService.CreateItem %v", err)
+	}
+
+	item := &model.OverviewItem{
+		ID:     newItem.ID,
+		Name:   newItem.Name,
+		Avatar: nil,
+	}
+
+	if len(itemDetail.Images) != 0 {
+		avatar := &models.ItemImage{
+			FkImage:  itemDetail.Images[0],
+			FkItem:   item.ID,
+			Order:    1,
+			IsAvatar: true,
+		}
+		err = i.itemImageRepository.SaveItemImage(ctx, avatar)
+		if err != nil {
+			return item, fmt.Errorf("error itemService.CreateItem.SaveItemImage %v", err)
+		}
+		item.Avatar = &model.OverviewImage{
+			ID: avatar.FkImage,
+		}
+	}
+
+	if len(itemDetail.Attributes) != 0 {
+		var itemAttributes []*models.ItemAttribute
+		for _, attr := range itemDetail.Attributes {
+			itemAttributes = append(itemAttributes, &models.ItemAttribute{
+				FkLabel: attr,
+				FkItem:  newItem.ID,
+			})
+		}
+		err = i.itemAttributeRepository.SaveItemAttributes(ctx, itemAttributes)
+		if err != nil {
+			return item, fmt.Errorf("error itemService.CreateItem.SaveItemAttributes %v", err)
+		}
+	}
+
+	return item, nil
+}
+
 func NewItemService(
 	itemRepository *repositories.ItemRepository,
 	collectionRepository *repositories.CollectionRepository,
 	labelRepository *repositories.LabelRepository,
+	itemAttributeRepository *repositories.ItemAttributeRepository,
+	itemImageRepository *repositories.ItemImageRepository,
 ) ItemService {
 	return &itemService{
-		itemRepository:       itemRepository,
-		collectionRepository: collectionRepository,
-		labelRepository:      labelRepository,
+		itemRepository:          itemRepository,
+		collectionRepository:    collectionRepository,
+		labelRepository:         labelRepository,
+		itemAttributeRepository: itemAttributeRepository,
+		itemImageRepository:     itemImageRepository,
 	}
 }

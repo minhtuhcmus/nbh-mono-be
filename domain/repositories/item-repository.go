@@ -77,7 +77,6 @@ func (i *ItemRepository) SearchItemByFilter(
 			WithContext(ctx).
 			Raw("SELECT i.* "+
 				"FROM items i "+
-				"INNER JOIN item_attribute ia ON i.id = ia.fk_item "+
 				"LIMIT ?, ?", pagination.Page*pagination.Size, pagination.Size).
 			Scan(&items).Error
 	}
@@ -105,6 +104,18 @@ func (i *ItemRepository) GetAvatarOfItems(
 	if err != nil {
 		itemAvatars = nil
 		return fmt.Errorf("error ItemRepository.GetAvatarOfItems %v", err)
+	}
+
+	return nil
+}
+
+func (i *ItemRepository) CreateItem(
+	ctx context.Context,
+	itemDetail *models.Item,
+) error {
+	err := datastore.GetDB().WithContext(ctx).Create(itemDetail).Error
+	if err != nil {
+		return fmt.Errorf("error ItemRepository.CreateItem %v", err)
 	}
 
 	return nil

@@ -1,0 +1,8 @@
+input NewImage {
+    link: String!
+}
+
+type OverviewImage {
+    id: Int!
+    link: String!
+}

@@ -22,7 +22,12 @@ func InitHTTPServer(ctx context.Context) (http.Handler, error) {
 	itemRepository := repositories.NewItemRepository()
 	collectionRepository := repositories.NewCollectionRepository()
 	labelRepository := repositories.NewLabelRepository()
-	itemService := services.NewItemService(itemRepository, collectionRepository, labelRepository)
-	httpHandler := handler.NewHTTPServer(middleware, itemService)
+	itemAttributeRepository := repositories.NewItemAttributeRepository()
+	itemImageRepository := repositories.NewItemImageRepository()
+	itemService := services.NewItemService(itemRepository, collectionRepository, labelRepository, itemAttributeRepository, itemImageRepository)
+	imageRepository := repositories.NewImageRepository()
+	imageService := services.NewImageService(imageRepository)
+	collectionService := services.NewCollectionService(collectionRepository)
+	httpHandler := handler.NewHTTPServer(middleware, itemService, imageService, collectionService)
 	return httpHandler, nil
 }

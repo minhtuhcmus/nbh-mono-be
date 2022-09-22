@@ -1,99 +1,148 @@
 INSERT INTO `collections`(`name`, `order`)
 VALUES
-  ('ROSE', 1),
-  ('DAISY', 2),
-  ('TULIP', 3),
-  ('DRY', 4),
-  ('EXTRA', 5),
-  ('HYDRANGEA', 6),
-  ('PEONY', 7),
-  ('CARNATION', 8),
-  ('GYPSOPHILA', 9),
-  ('LEAF', 10);
+  ('rose', 1),
+  ('daisy', 2),
+  ('tulip', 3),
+  ('dry', 4),
+  ('extra', 5),
+  ('hydrangea', 6),
+  ('peony', 7),
+  ('carnation', 8),
+  ('gypsophila', 9),
+  ('leaf', 10),
+  ('pine', 11);
 
 INSERT INTO `labels`(`code`, `value`, `fk_label`)
-VALUES ('ITEM_ORIGIN', 'Item origin', NULL);
+VALUES ('ITEM_ORIGIN', 'item-origin', NULL);
 
 SET @id = LAST_INSERT_ID();
 
 INSERT INTO `labels`(`code`, `value`, `fk_label`)
 VALUES
-  ('VN', 'Vietnam', @id),
-  ('ECU', 'Ecuador', @id),
-  ('JP', 'Japan', @id),
-  ('SA', 'South Africa', @id),
-  ('ML', 'Malaysia', @id),
-  ('IL', 'Israel', @id),
-  ('NZ', 'New Zealand', @id),
-  ('IT', 'Italy', @id),
-  ('US', 'United States', @id),
-  ('AU', 'Australia', @id),
-  ('DK', 'Denmark', @id),
-  ('NL', 'Netherlands', @id);
+  ('item-origin', 'vietnam', @id),
+  ('item-origin', 'ecuador', @id),
+  ('item-origin', 'japan', @id),
+  ('item-origin', 'south-africa', @id),
+  ('item-origin', 'malaysia', @id),
+  ('item-origin', 'israel', @id),
+  ('item-origin', 'new-zealand', @id),
+  ('item-origin', 'italy', @id),
+  ('item-origin', 'united-states', @id),
+  ('item-origin', 'australia', @id),
+  ('item-origin', 'denmark', @id),
+  ('item-origin', 'netherlands', @id);
 
 INSERT INTO `labels`(`code`, `value`, `fk_label`)
-VALUES ('ITEM_COLOR', 'Item color', NULL);
+VALUES ('ITEM_COLOR', 'item-color', NULL);
 
 SET @id = LAST_INSERT_ID();
 
 INSERT INTO `labels`(`code`, `value`, `fk_label`)
 VALUES
-  ('#FF0000', 'RED', @id),
-  ('#FFFFFF', 'WHITE', @id),
-  ('#964B00', 'BROWN' ,@id),
-  ('#E06666', 'DARK_PINK', @id),
-  ('#F4CCCC', 'LIGHT_PINK', @id),
-  ('#FFFDD0', 'CREAM', @id),
-  ('#FFFF00', 'YELLOW', @id),
-  ('#FFA500', 'ORANGE', @id),
-  ('#008000', 'GREEN', @id),
-  ('#0000FF', 'BLUE', @id),
-  ('#800080', 'PURPLE', @id);
+  ('item-color', 'red', @id),
+  ('item-color', 'white', @id),
+  ('item-color', 'brown' ,@id),
+  ('item-color', 'dark-pink', @id),
+  ('item-color', 'light-pink', @id),
+  ('item-color', 'cream', @id),
+  ('item-color', 'yellow', @id),
+  ('item-color', 'orange', @id),
+  ('item-color', 'green', @id),
+  ('item-color', 'blue', @id),
+  ('item-color', 'purple', @id);
 
 INSERT INTO `labels`(`code`, `value`, `fk_label`)
-VALUES ('ITEM_SIZE', 'Item size', NULL);
+VALUES ('ITEM_SIZE', 'item-size', NULL);
 
 SET @id = LAST_INSERT_ID();
 
 INSERT INTO `labels`(`code`, `value`, `fk_label`)
 VALUES
-  ('25cm', '25cm', @id),
-  ('30cm', '30cm', @id),
-  ('40cm', '40cm' ,@id),
-  ('50cm', '50cm', @id),
-  ('60cm', '60cm', @id),
-  ('70cm', '70cm', @id),
-  ('80cm', '80cm', @id),
-  ('90cm', '90cm', @id),
-  ('100cm', '100cm', @id),
-  ('110cm', '110cm', @id),
-  ('120cm', '120cm', @id),
-  ('130cm', '130cm', @id),
-  ('150cm', '150cm', @id),
-  ('180cm', '180cm', @id),
-  ('200cm', '200cm', @id),
-  ('250cm', '250cm', @id),
-  ('300cm', '300cm', @id),
-  ('400cm', '400cm', @id),
-  ('500cm', '500cm', @id),
-  ('600cm', '600cm', @id);
+  ('item-size', '25cm', @id),
+  ('item-size', '30cm', @id),
+  ('item-size', '40cm' ,@id),
+  ('item-size', '50cm', @id),
+  ('item-size', '60cm', @id),
+  ('item-size', '70cm', @id),
+  ('item-size', '80cm', @id),
+  ('item-size', '90cm', @id),
+  ('item-size', '100cm', @id),
+  ('item-size', '110cm', @id),
+  ('item-size', '120cm', @id),
+  ('item-size', '130cm', @id),
+  ('item-size', '150cm', @id),
+  ('item-size', '180cm', @id),
+  ('item-size', '200cm', @id),
+  ('item-size', '250cm', @id),
+  ('item-size', '300cm', @id),
+  ('item-size', '400cm', @id),
+  ('item-size', '500cm', @id),
+  ('item-size', '600cm', @id);
 
 INSERT INTO `labels`(`code`, `value`, `fk_label`)
-VALUES ('ITEM_AVAILABILITY', 'Item availability', NULL);
+VALUES ('ITEM_AVAILABILITY', 'item-availability', NULL);
 
 SET @id = LAST_INSERT_ID();
 
 INSERT INTO `labels`(`code`, `value`, `fk_label`)
 VALUES
-  ('JAN', 'January', @id),
-  ('FEB', 'February', @id),
-  ('MAR', 'March' ,@id),
-  ('APR', 'April', @id),
-  ('MAY', 'May', @id),
-  ('JUN', 'June', @id),
-  ('JUL', 'July', @id),
-  ('AUG', 'August', @id),
-  ('SEP', 'September', @id),
-  ('OCT', 'October', @id),
-  ('NOV', 'November', @id),
-  ('DEC', 'December', @id);
+  ('item-availability', 'january', @id),
+  ('item-availability', 'february', @id),
+  ('item-availability', 'march' ,@id),
+  ('item-availability', 'april', @id),
+  ('item-availability', 'may', @id),
+  ('item-availability', 'june', @id),
+  ('item-availability', 'july', @id),
+  ('item-availability', 'august', @id),
+  ('item-availability', 'september', @id),
+  ('item-availability', 'october', @id),
+  ('item-availability', 'november', @id),
+  ('item-availability', 'december', @id);
+
+-- INSERT INTO `items`(`name`, `order`)
+-- VALUES
+--   ('celeste', 1),
+--   ('sky-blue', 2),
+--   ('blue', 3),
+--   ('fancycake', 4),
+--   ('rainbow', 5),
+--   ('shyla', 6),
+--   ('aquamarine', 7),
+--   ('blue-&-white', 8),
+--   ('orange-&-white', 9),
+--   ('pink-&-white', 10),
+--   ('purple-&-white', 11),
+--   ('black-&-red', 12),
+--   ('mondial', 13),
+--   ('playa-blanca', 14),
+--   ('quicksand', 15),
+--   ('toffee', 16),
+--   ('moody-blues', 17),
+--   ('freedom', 18),
+--   ('explorer', 19),
+--   ('heart', 20),
+--   ('kahala', 21),
+--   ('freespirit', 22),
+--   ('coral-reef', 23),
+--   ('shimmer', 24),
+--   ('country-sun', 25),
+--   ('stardust', 26),
+--   ('havana', 27),
+--   ('pink-floyd', 28),
+--   ('christa', 29),
+--   ('full-monty', 30),
+--   ('saga', 31),
+--   ('moab', 32),
+--   ('lemonade', 33),
+--   ('elba', 34),
+--   ('blue-moon', 35),
+--   ('hot-majolica', 36),
+--   ('brilliant-star-leo', 37),
+--   ('girlie-folies', 38),
+--   ('scarlet-mini', 39),
+--   ('sweet-dream', 40),
+--   ('rosa-cheer-girl-apricot', 41),
+--   ('rosa-cheer-girl', 42),
+--   ('rosa-sea-anemone', 43),
+--   ('rosa-garnet-gem', 44),
+--   ('rosa-mystic-sarah', 45);

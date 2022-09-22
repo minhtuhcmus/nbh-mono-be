@@ -65,7 +65,7 @@ func SetupDB() error {
 
 	mySQLConn, err := db.DB()
 	if err != nil {
-		return fmt.Errorf("extracting mysqlDB from gorm erorr %v", err)
+		return fmt.Errorf("extracting mysqlDB from gorm error %v", err)
 	}
 
 	mySQLConn.SetMaxIdleConns(configuration.Database.MaxIdleConns)

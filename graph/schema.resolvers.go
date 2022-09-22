@@ -13,7 +13,20 @@ import (
 
 // Item is the resolver for the item field.
 func (r *mutationResolver) Item(ctx context.Context, newItem model.NewItem) (*model.OverviewItem, error) {
-	panic(fmt.Errorf("not implemented"))
+	item, err := r.itemService.CreateItem(ctx, &newItem)
+	if err != nil {
+		return nil, err
+	}
+	return item, nil
+}
+
+// Images is the resolver for the images field.
+func (r *mutationResolver) Images(ctx context.Context, newImage []*model.NewImage) ([]*model.OverviewImage, error) {
+	images, err := r.imageService.CreateImages(ctx, newImage)
+	if err != nil {
+		return nil, err
+	}
+	return images, nil
 }
 
 // Items is the resolver for the items field.
@@ -35,6 +48,15 @@ func (r *queryResolver) ItemAttributes(ctx context.Context) ([]*model.OverviewLa
 	return *attributes, nil
 }
 
+// Collections is the resolver for the collections field.
+func (r *queryResolver) Collections(ctx context.Context) ([]*model.OverviewCollection, error) {
+	collections, err := r.collectionService.GetCollections(ctx)
+	if err != nil {
+		return nil, err
+	}
+	return collections, nil
+}
+
 // Mutation returns generated.MutationResolver implementation.
 func (r *Resolver) Mutation() generated.MutationResolver { return &mutationResolver{r} }
 
@@ -50,6 +72,9 @@ type queryResolver struct{ *Resolver }
 //  - When renaming or deleting a resolver the old code will be put in here. You can safely delete
 //    it when you're done.
 //  - You have helper methods in this file. Move them out to keep these resolver files clean.
+func (r *mutationResolver) Image(ctx context.Context, newImage model.NewImage) (*model.OverviewImage, error) {
+	panic(fmt.Errorf("not implemented"))
+}
 func (r *mutationResolver) CreateRole(ctx context.Context, newRole model.NewRole) (*model.OverviewRole, error) {
 	panic(fmt.Errorf("not implemented"))
 }

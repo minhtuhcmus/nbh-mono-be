@@ -9,6 +9,7 @@ type Query {
 #  item(id: Int!): OverviewItem!
   items(pagination: Pagination!): [OverviewItem!]
   itemAttributes: [OverviewLabel!]
+  collections: [OverviewCollection!]
 #  me: OverviewUser!
 }
 
@@ -21,6 +22,7 @@ type Mutation {
 #  signUp(newUser: NewUser!): String!
 #  signIn(username: String!, password: String!): String!
   item(newItem: NewItem!): OverviewItem!
+  images(newImage: [NewImage!]!): [OverviewImage!]!
 #  user(newUser: NewUser!): OverviewUser!
 #  disableUser(userID: Int!): Boolean!
 }

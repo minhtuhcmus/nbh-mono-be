@@ -10,13 +10,19 @@ import (
 // It serves as dependency injection for your app, add any dependencies you require here.
 
 type Resolver struct {
-	itemService services.ItemService
+	itemService       services.ItemService
+	imageService      services.ImageService
+	collectionService services.CollectionService
 }
 
 func New(
 	itemService services.ItemService,
+	imageService services.ImageService,
+	collectionService services.CollectionService,
 ) generated.Config {
 	return generated.Config{Resolvers: &Resolver{
-		itemService: itemService,
+		itemService:       itemService,
+		imageService:      imageService,
+		collectionService: collectionService,
 	}}
 }

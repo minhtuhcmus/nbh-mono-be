@@ -21,6 +21,10 @@ type NewCollection struct {
 	Name string `json:"name"`
 }
 
+type NewImage struct {
+	Link string `json:"link"`
+}
+
 type NewItem struct {
 	Name       string  `json:"name"`
 	SearchKeys *string `json:"searchKeys"`

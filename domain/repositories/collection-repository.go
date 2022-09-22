@@ -21,7 +21,7 @@ func NewCollectionRepository() *CollectionRepository {
 
 func (c *CollectionRepository) GetCollectionsInfo(
 	ctx context.Context,
-	collectionInfos *[]model.OverviewCollection,
+	collectionInfos *[]*model.OverviewCollection,
 ) error {
 	err := datastore.
 		GetDB().
@@ -30,13 +30,13 @@ func (c *CollectionRepository) GetCollectionsInfo(
 			"c.id, " +
 			"c.name, " +
 			"c.`order`, " +
-			"count(*) AS totalItem " +
+			"count(ic.fk_item) AS totalItem " +
 			"FROM collections c " +
-			"INNER JOIN item_collection ic " +
+			"LEFT JOIN item_collection ic " +
 			"ON ic.fk_collection=c.id " +
 			"GROUP BY c.id, c.`order` " +
 			"ORDER BY `order`").
-		Scan(&collectionInfos).Error
+		Scan(collectionInfos).Error
 	if err != nil {
 		collectionInfos = nil
 		return fmt.Errorf("error CollectionRepository.GetCollectionsInfo: %v", err)

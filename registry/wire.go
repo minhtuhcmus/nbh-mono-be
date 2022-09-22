@@ -23,12 +23,17 @@ func InitHTTPServer(ctx context.Context) (http.Handler, error) {
 		//services.NewUserService,
 		//services.NewAuthService,
 		services.NewItemService,
+		services.NewImageService,
+		services.NewCollectionService,
 
 		//repositories.NewRoleRepository,
 		repositories.NewLabelRepository,
 		//repositories.NewUserRepository,
 		repositories.NewItemRepository,
 		repositories.NewCollectionRepository,
+		repositories.NewImageRepository,
+		repositories.NewItemAttributeRepository,
+		repositories.NewItemImageRepository,
 	)
 	return nil, nil
 }

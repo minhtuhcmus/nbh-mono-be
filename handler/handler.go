@@ -46,6 +46,8 @@ func ErrorPresenter() graphql.ErrorPresenterFunc {
 func NewHTTPServer(
 	middleware middlewares.Middleware,
 	itemService services.ItemService,
+	imageService services.ImageService,
+	collectionService services.CollectionService,
 ) http.Handler {
 	conf := config.GetConfig()
 
@@ -61,6 +63,8 @@ func NewHTTPServer(
 			generated.NewExecutableSchema(
 				graph.New(
 					itemService,
+					imageService,
+					collectionService,
 				)))
 
 		srv.AddTransport(&transport.Websocket{

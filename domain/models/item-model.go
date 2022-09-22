@@ -8,10 +8,11 @@ type Item struct {
 }
 
 type ItemImage struct {
-	FkLabel int  `json:"fk_label"`
-	FkItem  int  `json:"fk_item"`
-	Order   int  `json:"order"`
-	Active  bool `json:"active"`
+	FkItem   int  `json:"fk_item"`
+	FkImage  int  `json:"fk_image"`
+	Order    int  `json:"order"`
+	IsAvatar bool `json:"is_avatar"`
+	Active   bool `json:"active"`
 }
 
 type ItemAttribute struct {
