@@ -1,6 +1,6 @@
 input NewItem {
    name: String!
-   searchKeys: String
+   searchKeys: String!
    attributes: [Int!]
    images:[Int!]
 }

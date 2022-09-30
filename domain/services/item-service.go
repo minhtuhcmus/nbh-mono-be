@@ -26,8 +26,8 @@ type itemService struct {
 func (i itemService) GetItems(ctx context.Context, filter *model.Pagination) (*[]*model.OverviewItem, error) {
 	var items []*models.Item
 	var err error
-	if filter.Keyword != nil {
-		err = i.itemRepository.SearchItemByKeyword(ctx, *filter.Keyword, &items)
+	if filter.Keyword != "" {
+		err = i.itemRepository.SearchItemByKeyword(ctx, filter.Keyword, &items)
 	} else {
 		if filter.Collections != nil {
 			err = i.collectionRepository.GetItemsInCollections(ctx, filter, &items)
@@ -130,7 +130,7 @@ func (i itemService) GetItemAttribute(ctx context.Context) (*[]*model.OverviewLa
 func (i itemService) CreateItem(ctx context.Context, itemDetail *model.NewItem) (*model.OverviewItem, error) {
 	newItem := &models.Item{
 		Name:       itemDetail.Name,
-		SearchKeys: *itemDetail.SearchKeys,
+		SearchKeys: itemDetail.SearchKeys,
 	}
 
 	err := i.itemRepository.CreateItem(ctx, newItem)

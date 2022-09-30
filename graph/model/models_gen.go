@@ -26,10 +26,10 @@ type NewImage struct {
 }
 
 type NewItem struct {
-	Name       string  `json:"name"`
-	SearchKeys *string `json:"searchKeys"`
-	Attributes []int   `json:"attributes"`
-	Images     []int   `json:"images"`
+	Name       string `json:"name"`
+	SearchKeys string `json:"searchKeys"`
+	Attributes []int  `json:"attributes"`
+	Images     []int  `json:"images"`
 }
 
 type NewLabel struct {
@@ -106,6 +106,6 @@ type Pagination struct {
 	Collections []int       `json:"collections"`
 	Page        int         `json:"page"`
 	Size        int         `json:"size"`
-	Keyword     *string     `json:"keyword"`
+	Keyword     string      `json:"keyword"`
 	Filter      *ItemFilter `json:"filter"`
 }

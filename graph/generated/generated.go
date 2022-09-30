@@ -494,7 +494,7 @@ input Pagination {
     collections: [Int!]
     page: Int!
     size: Int!
-    keyword: String
+    keyword: String!
     filter: ItemFilter
 }`, BuiltIn: false},
 	{Name: "../schemas/image.schema.graphqls", Input: `input NewImage {
@@ -507,7 +507,7 @@ type OverviewImage {
 }`, BuiltIn: false},
 	{Name: "../schemas/item.schema.graphqls", Input: `input NewItem {
    name: String!
-   searchKeys: String
+   searchKeys: String!
    attributes: [Int!]
    images:[Int!]
 }
@@ -4441,7 +4441,7 @@ func (ec *executionContext) unmarshalInputNewItem(ctx context.Context, obj inter
 			var err error
 
 			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("searchKeys"))
-			it.SearchKeys, err = ec.unmarshalOString2ᚖstring(ctx, v)
+			it.SearchKeys, err = ec.unmarshalNString2string(ctx, v)
 			if err != nil {
 				return it, err
 			}
@@ -4697,7 +4697,7 @@ func (ec *executionContext) unmarshalInputPagination(ctx context.Context, obj in
 			var err error
 
 			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("keyword"))
-			it.Keyword, err = ec.unmarshalOString2ᚖstring(ctx, v)
+			it.Keyword, err = ec.unmarshalNString2string(ctx, v)
 			if err != nil {
 				return it, err
 			}
