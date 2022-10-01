@@ -26,8 +26,8 @@ type itemService struct {
 func (i itemService) GetItems(ctx context.Context, filter *model.Pagination) (*[]*model.OverviewItem, error) {
 	var items []*models.Item
 	var err error
-	if filter.Keyword != "" {
-		err = i.itemRepository.SearchItemByKeyword(ctx, filter.Keyword, &items)
+	if filter.Keyword != nil {
+		err = i.itemRepository.SearchItemByKeyword(ctx, *filter.Keyword, &items)
 	} else {
 		if filter.Collections != nil {
 			err = i.collectionRepository.GetItemsInCollections(ctx, filter, &items)

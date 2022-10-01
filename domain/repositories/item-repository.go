@@ -46,7 +46,7 @@ func (i *ItemRepository) SearchItemByKeyword(
 	err := datastore.
 		GetDB().
 		WithContext(ctx).
-		Raw("MATCH (name, search_keys, description) "+
+		Raw("SELECT * FROM items WHERE MATCH (name, search_keys, description) "+
 			"AGAINST (? IN NATURAL LANGUAGE MODE)", keyword).
 		Scan(&items).Error
 	if err != nil {
