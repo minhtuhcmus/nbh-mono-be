@@ -28,6 +28,8 @@ func InitHTTPServer(ctx context.Context) (http.Handler, error) {
 	imageRepository := repositories.NewImageRepository()
 	imageService := services.NewImageService(imageRepository)
 	collectionService := services.NewCollectionService(collectionRepository)
-	httpHandler := handler.NewHTTPServer(middleware, itemService, imageService, collectionService)
+	userRepository := repositories.NewUserRepository()
+	authService := services.NewAuthService(userRepository)
+	httpHandler := handler.NewHTTPServer(middleware, itemService, imageService, collectionService, authService)
 	return httpHandler, nil
 }

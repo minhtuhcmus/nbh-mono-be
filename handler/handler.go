@@ -48,6 +48,7 @@ func NewHTTPServer(
 	itemService services.ItemService,
 	imageService services.ImageService,
 	collectionService services.CollectionService,
+	authService services.AuthService,
 ) http.Handler {
 	conf := config.GetConfig()
 
@@ -56,9 +57,9 @@ func NewHTTPServer(
 		middleware.WithCors(),
 	)
 	router.Route("/graphql", func(r chi.Router) {
-		//r.Use(
-		//	middleware.WithAuth(),
-		//)
+		r.Use(
+			middleware.WithAuth(),
+		)
 		srv := handler.NewDefaultServer(
 			generated.NewExecutableSchema(
 				graph.New(
@@ -94,7 +95,7 @@ func NewHTTPServer(
 			_, _ = fmt.Fprintf(writer, "OK\n")
 		})
 
-	//router.Route("/auth", NewAuthHandler(controllers.NewAuthController(authService)))
+	router.Route("/auth", NewAuthHandler(&authService))
 
 	return router
 }

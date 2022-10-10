@@ -17,7 +17,8 @@ func (m middleware) WithAuth() func(handler http.Handler) http.Handler {
 			auth := r.Header.Get("Authorization")
 
 			if auth == "" {
-				http.Error(w, fmt.Sprintln("Authorization header not found"), http.StatusUnauthorized)
+				//http.Error(w, fmt.Sprintln("Authorization header not found"), http.StatusUnauthorized)
+				next.ServeHTTP(w, r)
 				return
 			}
 
@@ -37,7 +38,7 @@ func (m middleware) WithAuth() func(handler http.Handler) http.Handler {
 					http.Error(w, fmt.Sprintln("Token has expired. Please sign in again"), http.StatusBadRequest)
 					return
 				} else {
-					accessToken, err := utils.GenTokenPair(authClaims.UserID, authClaims.Permissions)
+					accessToken, err := utils.GenTokenPair(authClaims.UserID, authClaims.Roles)
 					if err != nil {
 						http.Error(w, fmt.Sprintf("Cannot regen access token %v", err), http.StatusBadRequest)
 						return

@@ -99,6 +99,38 @@ VALUES
   ('item-availability', 'november', @id),
   ('item-availability', 'december', @id);
 
+INSERT INTO `users`(`username`, `hashed_password`)
+VALUES ('admin', '$2a$14$yCNUd90EI3.fB3kOgvyS8Oht5097zjcfkmKtyvLNuaaAflqWDqpP6');
+
+INSERT INTO `roles`(`label`)
+VALUES ('admin'), ('customer');
+
+INSERT INTO `user_role`(`fk_user`, `fk_role`)
+VALUES (1, 1);
+--
+-- INSERT INTO `labels`(`code`, `value`, `fk_label`)
+-- VALUES ('USER_PERMISSION', 'user-permission', NULL);
+--
+-- SET @id = LAST_INSERT_ID();
+--
+-- INSERT INTO `labels`(`code`, `value`, `fk_label`)
+-- VALUES
+--   ('user-permission', 'read', @id),
+--   ('user-permission', 'write', @id),
+--   ('user-permission', 'update' ,@id);
+--
+-- INSERT INTO `labels`(`code`, `value`, `fk_label`)
+-- VALUES ('SYSTEM_RESOURCES', 'system-resources', NULL);
+--
+-- SET @id = LAST_INSERT_ID();
+--
+-- INSERT INTO `labels`(`code`, `value`, `fk_label`)
+-- VALUES
+--   ('system-resources', 'items', @id),
+--   ('system-resources', 'roles', @id),
+--   ('system-resources', 'users' ,@id),
+--   ('system-resources', 'images' ,@id);
+
 -- INSERT INTO `items`(`name`, `order`)
 -- VALUES
 --   ('celeste', 1),

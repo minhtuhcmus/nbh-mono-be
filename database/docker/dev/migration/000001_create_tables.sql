@@ -85,3 +85,34 @@ CREATE TABLE `item_attribute`(
   PRIMARY KEY (`fk_item`, `fk_label`)
 )ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 AUTO_INCREMENT=1;
 
+DROP TABLE IF EXISTS `users`;
+CREATE TABLE `users`(
+  id INT AUTO_INCREMENT PRIMARY KEY,
+  username VARCHAR(40) NOT NULL,
+  hashed_password VARCHAR(255) NOT NULL,
+  active BOOLEAN NOT NULL DEFAULT TRUE
+)ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 AUTO_INCREMENT=1;
+
+DROP TABLE IF EXISTS `roles`;
+CREATE TABLE `roles`(
+  id INT AUTO_INCREMENT PRIMARY KEY,
+  label VARCHAR(255) NOT NULL,
+  active BOOLEAN NOT NULL DEFAULT TRUE
+)ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 AUTO_INCREMENT=1;
+
+DROP TABLE IF EXISTS `user_role`;
+CREATE TABLE `user_role`(
+  fk_user INT,
+  fk_role INT,
+  active BOOLEAN NOT NULL DEFAULT TRUE,
+  PRIMARY KEY (`fk_user`, `fk_role`)
+)ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 AUTO_INCREMENT=1;
+
+--
+-- DROP TABLE IF EXISTS `permissions`;
+-- CREATE TABLE `permissions`(
+--   fk_role INT,
+--   fk_label_resource VARCHAR(40),
+--   permit enum('read', 'write', 'read-all', 'edit')
+-- )
+
