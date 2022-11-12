@@ -60,7 +60,10 @@ func GenTokenPair(userID int, roles []string) (string, error) {
 		return "", err
 	}
 
-	datastore.GetCache().Set(context.Background(), strconv.Itoa(userID), accessToken, time.Hour*24*3)
+	status := datastore.GetCache().Set(context.Background(), strconv.Itoa(userID), accessToken, time.Hour*24*3)
+	if status.Err() != nil {
+		return "", status.Err()
+	}
 
 	return accessToken, nil
 }

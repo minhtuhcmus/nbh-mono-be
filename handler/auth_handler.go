@@ -58,6 +58,7 @@ func (ah *authHandler) SignIn(w http.ResponseWriter, r *http.Request) {
 
 	http.SetCookie(w, &http.Cookie{
 		Domain: "http://localhost:8080",
+		Path:   "/",
 		Name:   "access_token",
 		Value:  accessToken,
 		Secure: true,

@@ -6,7 +6,6 @@ import (
 	"github.com/minhtuhcmus/nbh-mono-be/database/datastore"
 	"github.com/minhtuhcmus/nbh-mono-be/utils"
 	"net/http"
-	"reflect"
 	"strconv"
 	"time"
 )
@@ -14,18 +13,27 @@ import (
 func (m middleware) WithAuth() func(handler http.Handler) http.Handler {
 	return func(next http.Handler) http.Handler {
 		return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-			auth := r.Header.Get("Authorization")
-
-			if auth == "" {
-				//http.Error(w, fmt.Sprintln("Authorization header not found"), http.StatusUnauthorized)
-				next.ServeHTTP(w, r)
+			accessToken, err := r.Cookie("access_token")
+			if err != nil {
+				http.Error(w, fmt.Sprintf("access_token not found %v", err), http.StatusUnauthorized)
 				return
 			}
 
-			bearer := "Bearer "
-			auth = auth[len(bearer):]
+			if accessToken.Value == "" {
+				http.Error(w, fmt.Sprintf("access_token not found %v", err), http.StatusUnauthorized)
+				return
+			}
 
-			authClaims, err := utils.JwtValidate(auth)
+			//if auth == "" {
+			//	http.Error(w, fmt.Sprintln("Authorization header not found"), http.StatusUnauthorized)
+			//	//next.ServeHTTP(w, r)
+			//	return
+			//}
+
+			//bearer := "Bearer "
+			//auth = auth[len(bearer):]
+
+			authClaims, err := utils.JwtValidate(accessToken.Value)
 			if err != nil {
 				http.Error(w, fmt.Sprintf("Invalid token %v", err), http.StatusForbidden)
 				return
@@ -34,7 +42,8 @@ func (m middleware) WithAuth() func(handler http.Handler) http.Handler {
 			if authClaims.StandardClaims.ExpiresAt < time.Now().Unix() {
 				redisClient := datastore.GetCache()
 				savedAccessToken := redisClient.Get(context.Background(), strconv.Itoa(authClaims.UserID))
-				if savedAccessToken == nil || !reflect.DeepEqual(auth, datastore.GetCache()) {
+
+				if savedAccessToken == nil {
 					http.Error(w, fmt.Sprintln("Token has expired. Please sign in again"), http.StatusBadRequest)
 					return
 				} else {
@@ -46,7 +55,8 @@ func (m middleware) WithAuth() func(handler http.Handler) http.Handler {
 
 					http.SetCookie(w, &http.Cookie{
 						Domain: "http://localhost:8080",
-						Name:   "access_token",
+						Path:   "/",
+						Name:   "access_tokenoken",
 						Value:  accessToken,
 						Secure: true,
 						MaxAge: 300,
