@@ -15,12 +15,14 @@ func (m middleware) WithAuth() func(handler http.Handler) http.Handler {
 		return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 			accessToken, err := r.Cookie("access_token")
 			if err != nil {
-				http.Error(w, fmt.Sprintf("access_token not found %v", err), http.StatusUnauthorized)
+				//http.Error(w, fmt.Sprintf("access_token not found %v", err), http.StatusUnauthorized)
+				next.ServeHTTP(w, r)
 				return
 			}
 
 			if accessToken.Value == "" {
-				http.Error(w, fmt.Sprintf("access_token not found %v", err), http.StatusUnauthorized)
+				//http.Error(w, fmt.Sprintf("access_token not found %v", err), http.StatusUnauthorized)
+				next.ServeHTTP(w, r)
 				return
 			}
 

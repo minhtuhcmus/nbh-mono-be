@@ -99,6 +99,18 @@ VALUES
   ('item-availability', 'november', @id),
   ('item-availability', 'december', @id);
 
+INSERT INTO `labels`(`code`, `value`, `fk_label`)
+VALUES ('ITEM_PRICE', 'item-price', NULL);
+
+SET @id = LAST_INSERT_ID();
+
+INSERT INTO `labels`(`code`, `value`, `fk_label`)
+VALUES
+  ('item-price', '100000', @id),
+  ('item-price', '1000000', @id),
+  ('item-price', '32000' ,@id),
+  ('item-price', '45000', @id);
+
 INSERT INTO `users`(`username`, `hashed_password`)
 VALUES ('admin', '$2a$14$yCNUd90EI3.fB3kOgvyS8Oht5097zjcfkmKtyvLNuaaAflqWDqpP6');
 

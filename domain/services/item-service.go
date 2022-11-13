@@ -11,6 +11,7 @@ import (
 
 type ItemService interface {
 	GetItems(ctx context.Context, filter *model.Pagination) (*[]*model.OverviewItem, error)
+	GetItem(ctx context.Context) *model.DetailItem
 	GetItemAttribute(ctx context.Context) (*[]*model.OverviewLabel, error)
 	CreateItem(ctx context.Context, itemDetail *model.NewItem) (*model.OverviewItem, error)
 }
@@ -21,6 +22,11 @@ type itemService struct {
 	labelRepository         *repositories.LabelRepository
 	itemAttributeRepository *repositories.ItemAttributeRepository
 	itemImageRepository     *repositories.ItemImageRepository
+}
+
+func (i itemService) GetItem(ctx context.Context) *model.DetailItem {
+	//TODO implement me
+	panic("implement me")
 }
 
 func (i itemService) GetItems(ctx context.Context, filter *model.Pagination) (*[]*model.OverviewItem, error) {
