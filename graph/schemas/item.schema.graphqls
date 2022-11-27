@@ -3,6 +3,7 @@ input NewItem {
    searchKeys: String!
    attributes: [Int!]
    images:[Int!]
+   type: Int!
 }
 
 type DetailItem {

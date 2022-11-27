@@ -32,7 +32,7 @@ func (c *CollectionRepository) GetCollectionsInfo(
 			"c.`order`, " +
 			"count(ic.fk_item) AS totalItem " +
 			"FROM collections c " +
-			"LEFT JOIN item_collection ic " +
+			"LEFT JOIN item_collections ic " +
 			"ON ic.fk_collection=c.id " +
 			"GROUP BY c.id, c.`order` " +
 			"ORDER BY `order`").
@@ -53,8 +53,8 @@ func (c *CollectionRepository) GetItemsInCollections(
 		GetDB().
 		WithContext(ctx).
 		Raw("SELECT * "+
-			"FROM items INNER JOIN item_collection ON item.id = item_collection.fk_item "+
-			"WHERE item_collection.fk_collection IN ? AND active = TRUE "+
+			"FROM items INNER JOIN item_collections ON item.id = item_collections.fk_item "+
+			"WHERE item_collections.fk_collection IN ? AND active = TRUE "+
 			"LIMIT ?, ?", pagination.Collections, pagination.Page*pagination.Size, pagination.Size).
 		Scan(&items).Error
 	if err != nil {

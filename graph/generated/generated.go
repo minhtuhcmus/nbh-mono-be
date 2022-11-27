@@ -510,6 +510,7 @@ type OverviewImage {
    searchKeys: String!
    attributes: [Int!]
    images:[Int!]
+   type: Int!
 }
 
 type DetailItem {
@@ -4422,7 +4423,7 @@ func (ec *executionContext) unmarshalInputNewItem(ctx context.Context, obj inter
 		asMap[k] = v
 	}
 
-	fieldsInOrder := [...]string{"name", "searchKeys", "attributes", "images"}
+	fieldsInOrder := [...]string{"name", "searchKeys", "attributes", "images", "type"}
 	for _, k := range fieldsInOrder {
 		v, ok := asMap[k]
 		if !ok {
@@ -4458,6 +4459,14 @@ func (ec *executionContext) unmarshalInputNewItem(ctx context.Context, obj inter
 
 			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("images"))
 			it.Images, err = ec.unmarshalOInt2ᚕintᚄ(ctx, v)
+			if err != nil {
+				return it, err
+			}
+		case "type":
+			var err error
+
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("type"))
+			it.Type, err = ec.unmarshalNInt2int(ctx, v)
 			if err != nil {
 				return it, err
 			}

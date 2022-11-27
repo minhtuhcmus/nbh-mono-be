@@ -30,6 +30,7 @@ type NewItem struct {
 	SearchKeys string `json:"searchKeys"`
 	Attributes []int  `json:"attributes"`
 	Images     []int  `json:"images"`
+	Type       int    `json:"type"`
 }
 
 type NewLabel struct {

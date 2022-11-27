@@ -26,3 +26,9 @@ type ItemAvatar struct {
 	FkImage int    `json:"fk_image"`
 	Link    string `json:"link"`
 }
+
+type ItemCollection struct {
+	FkItem       int  `json:"fkItem"`
+	FkCollection int  `json:"fkCollection"`
+	Active       bool `json:"active"`
+}

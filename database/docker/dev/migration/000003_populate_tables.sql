@@ -117,7 +117,7 @@ VALUES ('admin', '$2a$14$yCNUd90EI3.fB3kOgvyS8Oht5097zjcfkmKtyvLNuaaAflqWDqpP6')
 INSERT INTO `roles`(`label`)
 VALUES ('admin'), ('customer');
 
-INSERT INTO `user_role`(`fk_user`, `fk_role`)
+INSERT INTO `user_roles`(`fk_user`, `fk_role`)
 VALUES (1, 1);
 --
 -- INSERT INTO `labels`(`code`, `value`, `fk_label`)

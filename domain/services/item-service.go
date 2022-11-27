@@ -17,11 +17,12 @@ type ItemService interface {
 }
 
 type itemService struct {
-	itemRepository          *repositories.ItemRepository
-	collectionRepository    *repositories.CollectionRepository
-	labelRepository         *repositories.LabelRepository
-	itemAttributeRepository *repositories.ItemAttributeRepository
-	itemImageRepository     *repositories.ItemImageRepository
+	itemRepository           *repositories.ItemRepository
+	collectionRepository     *repositories.CollectionRepository
+	labelRepository          *repositories.LabelRepository
+	itemAttributeRepository  *repositories.ItemAttributeRepository
+	itemImageRepository      *repositories.ItemImageRepository
+	itemCollectionRepository *repositories.ItemCollectionRepository
 }
 
 func (i itemService) GetItem(ctx context.Context) *model.DetailItem {
@@ -137,11 +138,23 @@ func (i itemService) CreateItem(ctx context.Context, itemDetail *model.NewItem) 
 	newItem := &models.Item{
 		Name:       itemDetail.Name,
 		SearchKeys: itemDetail.SearchKeys,
+		Active:     true,
 	}
 
 	err := i.itemRepository.CreateItem(ctx, newItem)
 	if err != nil {
 		return nil, fmt.Errorf("error itemService.CreateItem %v", err)
+	}
+
+	var newItemCollection []*models.ItemCollection
+	newItemCollection = append(newItemCollection, &models.ItemCollection{
+		FkItem:       newItem.ID,
+		FkCollection: itemDetail.Type,
+		Active:       true,
+	})
+	err = i.itemCollectionRepository.SaveItemCollections(ctx, newItemCollection)
+	if err != nil {
+		return nil, fmt.Errorf("error itemService.SaveItemCollection %v", err)
 	}
 
 	item := &model.OverviewItem{
@@ -156,6 +169,7 @@ func (i itemService) CreateItem(ctx context.Context, itemDetail *model.NewItem) 
 			FkItem:   item.ID,
 			Order:    1,
 			IsAvatar: true,
+			Active:   true,
 		}
 		err = i.itemImageRepository.SaveItemImage(ctx, avatar)
 		if err != nil {
@@ -172,6 +186,7 @@ func (i itemService) CreateItem(ctx context.Context, itemDetail *model.NewItem) 
 			itemAttributes = append(itemAttributes, &models.ItemAttribute{
 				FkLabel: attr,
 				FkItem:  newItem.ID,
+				Active:  true,
 			})
 		}
 		err = i.itemAttributeRepository.SaveItemAttributes(ctx, itemAttributes)

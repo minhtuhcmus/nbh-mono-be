@@ -43,7 +43,7 @@ func (u *UserRepository) GetRoleByUserID(
 	err := datastore.
 		GetDB().
 		WithContext(ctx).
-		Raw("SELECT r.label FROM user_role ur INNER JOIN roles r ON ur.fk_role = r.id WHERE ur.fk_user = ?", userID).
+		Raw("SELECT r.label FROM user_roles ur INNER JOIN roles r ON ur.fk_role = r.id WHERE ur.fk_user = ?", userID).
 		Scan(&roles).Error
 	if err != nil {
 		return fmt.Errorf("error UserRepository.GetRoleByUserID %v", err)

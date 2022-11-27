@@ -97,9 +97,9 @@ func (i *ItemRepository) GetAvatarOfItems(
 		GetDB().
 		WithContext(ctx).
 		Raw("SELECT items.id, images.id, images.link "+
-			"FROM items INNER JOIN item_image ON items.id = item_image.fk_item "+
-			"INNER JOIN images ON item_image.fk_image = images.id "+
-			"WHERE item_image.is_avatar = TRUE AND items.id IN ? ", itemIds).
+			"FROM items INNER JOIN item_images ON items.id = item_images.fk_item "+
+			"INNER JOIN images ON item_images.fk_image = images.id "+
+			"WHERE item_images.is_avatar = TRUE AND items.id IN ? ", itemIds).
 		Scan(&itemAvatars).Error
 	if err != nil {
 		itemAvatars = nil

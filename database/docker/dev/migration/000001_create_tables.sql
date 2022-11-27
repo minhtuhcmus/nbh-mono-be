@@ -2,7 +2,7 @@ DROP TABLE IF EXISTS `collections`;
 CREATE TABLE `collections`(
   id INT AUTO_INCREMENT PRIMARY KEY,
   name VARCHAR(20) NOT NULL UNIQUE,
-  `order` INT NOT NULL UNIQUE,
+  `order` INT,
   active BOOLEAN NOT NULL DEFAULT TRUE
 )ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 AUTO_INCREMENT=1;
 
@@ -12,16 +12,16 @@ CREATE TABLE `items` (
   name VARCHAR(20) NOT NULL UNIQUE,
   search_keys TEXT,
   description TEXT,
-  `order` INT NOT NULL,
+  `order` INT,
   active BOOLEAN NOT NULL DEFAULT TRUE,
   FULLTEXT (`name`, `search_keys`, `description`)
 )ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 AUTO_INCREMENT=1;
 
-DROP TABLE IF EXISTS `item_collection`;
-CREATE TABLE `item_collection`(
+DROP TABLE IF EXISTS `item_collections`;
+CREATE TABLE `item_collections`(
   fk_item INT NOT NULL,
   fk_collection INT NOT NULL,
-  `order` INT NOT NULL,
+  `order` INT,
   active BOOLEAN NOT NULL DEFAULT TRUE,
   PRIMARY KEY (`fk_item`, `fk_collection`)
 )ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 AUTO_INCREMENT=1;
@@ -32,11 +32,11 @@ CREATE TABLE `images`(
   link VARCHAR(1024) NOT NULL
 )ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 AUTO_INCREMENT=1;
 
-DROP TABLE IF EXISTS `item_image`;
-CREATE TABLE `item_image`(
+DROP TABLE IF EXISTS `item_images`;
+CREATE TABLE `item_images`(
   fk_item INT NOT NULL,
   fk_image INT NOT NULL,
-  `order` INT NOT NULL,
+  `order` INT,
   is_avatar BOOLEAN NOT NULL DEFAULT FALSE,
   active BOOLEAN NOT NULL DEFAULT TRUE,
   PRIMARY KEY (`fk_item`, `fk_image`)
@@ -77,8 +77,8 @@ CREATE TABLE `labels` (
   active BOOLEAN NOT NULL DEFAULT TRUE
 )ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 AUTO_INCREMENT=1;
 
-DROP TABLE IF EXISTS `item_attribute`;
-CREATE TABLE `item_attribute`(
+DROP TABLE IF EXISTS `item_attributes`;
+CREATE TABLE `item_attributes`(
   fk_label INT NOT NULL,
   fk_item INT NOT NULL,
   active BOOLEAN NOT NULL DEFAULT TRUE,
@@ -100,8 +100,8 @@ CREATE TABLE `roles`(
   active BOOLEAN NOT NULL DEFAULT TRUE
 )ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 AUTO_INCREMENT=1;
 
-DROP TABLE IF EXISTS `user_role`;
-CREATE TABLE `user_role`(
+DROP TABLE IF EXISTS `user_roles`;
+CREATE TABLE `user_roles`(
   fk_user INT,
   fk_role INT,
   active BOOLEAN NOT NULL DEFAULT TRUE,

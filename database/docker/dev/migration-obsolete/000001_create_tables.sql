@@ -102,16 +102,16 @@ CREATE TABLE `images`(
   link VARCHAR(1024) NOT NULL
 )ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 AUTO_INCREMENT=1;
 
-DROP TABLE IF EXISTS `item_image`;
-CREATE TABLE `item_image`(
+DROP TABLE IF EXISTS `item_images`;
+CREATE TABLE `item_images`(
   fk_item INT NOT NULL,
   fk_image INT NOT NULL,
   active BOOLEAN NOT NULL DEFAULT TRUE,
   PRIMARY KEY (`fk_item`, `fk_image`)
 )ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 AUTO_INCREMENT=1;
 
-DROP TABLE IF EXISTS `item_attribute`;
-CREATE TABLE `item_attribute`(
+DROP TABLE IF EXISTS `item_attributes`;
+CREATE TABLE `item_attributes`(
   fk_label INT NOT NULL,
   fk_item INT NOT NULL,
   active BOOLEAN NOT NULL DEFAULT TRUE,
