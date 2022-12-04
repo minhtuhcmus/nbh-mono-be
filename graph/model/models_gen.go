@@ -7,14 +7,26 @@ import (
 )
 
 type DetailItem struct {
-	ID         int              `json:"id"`
-	Name       string           `json:"name"`
-	Attributes []*OverviewLabel `json:"attributes"`
-	Images     []*OverviewImage `json:"images"`
+	ID                int                 `json:"id"`
+	Name              string              `json:"name"`
+	Description       *string             `json:"description"`
+	Order             int                 `json:"order"`
+	Attributes        []*OverviewLabel    `json:"attributes"`
+	Images            []*OverviewImage    `json:"images"`
+	Collection        *OverviewCollection `json:"collection"`
+	OrderInCollection int                 `json:"orderInCollection"`
 }
 
 type ItemFilter struct {
 	Attributes []int `json:"attributes"`
+}
+
+type ListItem struct {
+	Data      []*DetailItem `json:"data"`
+	Page      int           `json:"page"`
+	Size      int           `json:"size"`
+	Total     int           `json:"total"`
+	IsEndPage bool          `json:"isEndPage"`
 }
 
 type NewCollection struct {
@@ -26,11 +38,13 @@ type NewImage struct {
 }
 
 type NewItem struct {
-	Name       string `json:"name"`
-	SearchKeys string `json:"searchKeys"`
-	Attributes []int  `json:"attributes"`
-	Images     []int  `json:"images"`
-	Type       int    `json:"type"`
+	ID          *int    `json:"id"`
+	Name        string  `json:"name"`
+	SearchKeys  string  `json:"searchKeys"`
+	Description *string `json:"description"`
+	Attributes  []int   `json:"attributes"`
+	Images      []int   `json:"images"`
+	Type        int     `json:"type"`
 }
 
 type NewLabel struct {

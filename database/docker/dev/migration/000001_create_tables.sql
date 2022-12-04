@@ -19,7 +19,7 @@ CREATE TABLE `items` (
 
 DROP TABLE IF EXISTS `item_collections`;
 CREATE TABLE `item_collections`(
-  fk_item INT NOT NULL,
+  fk_item INT NOT NULL UNIQUE,
   fk_collection INT NOT NULL,
   `order` INT,
   active BOOLEAN NOT NULL DEFAULT TRUE,
@@ -35,7 +35,7 @@ CREATE TABLE `images`(
 DROP TABLE IF EXISTS `item_images`;
 CREATE TABLE `item_images`(
   fk_item INT NOT NULL,
-  fk_image INT NOT NULL,
+  fk_image INT NOT NULL UNIQUE,
   `order` INT,
   is_avatar BOOLEAN NOT NULL DEFAULT FALSE,
   active BOOLEAN NOT NULL DEFAULT TRUE,

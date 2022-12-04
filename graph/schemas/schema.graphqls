@@ -10,6 +10,7 @@ type Query {
   items(pagination: Pagination!): [OverviewItem!]
   itemAttributes: [OverviewLabel!]
   collections: [OverviewCollection!]
+  listItem(pagination: Pagination!): ListItem!
 #  me: OverviewUser!
 }
 

@@ -1,6 +1,8 @@
 input NewItem {
+   id: Int
    name: String!
    searchKeys: String!
+   description: String
    attributes: [Int!]
    images:[Int!]
    type: Int!
@@ -9,8 +11,12 @@ input NewItem {
 type DetailItem {
    id: Int!
    name: String!
+   description: String
+   order: Int!
    attributes: [OverviewLabel!]
    images: [OverviewImage!]
+   collection: OverviewCollection!
+   orderInCollection: Int!
 }
 
 type OverviewItem {
@@ -28,4 +34,12 @@ type OverviewCollection {
    name: String!
    order: Int!
    totalItem: Int!
+}
+
+type ListItem {
+   data: [DetailItem!]
+   page: Int!
+   size: Int!
+   total: Int!
+   isEndPage: Boolean!
 }

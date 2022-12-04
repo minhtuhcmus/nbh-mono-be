@@ -32,3 +32,14 @@ type ItemCollection struct {
 	FkCollection int  `json:"fkCollection"`
 	Active       bool `json:"active"`
 }
+
+type DetailItem struct {
+	ID                int     `json:"id"`
+	Name              string  `json:"name"`
+	Description       *string `json:"description"`
+	Order             int     `json:"order"`
+	Attributes        *string `json:"attributes"`
+	Images            *string `json:"images"`
+	Collection        *string `json:"collection"`
+	OrderInCollection int     `json:"orderInCollection"`
+}

@@ -2,6 +2,7 @@ package services
 
 import (
 	"context"
+	"encoding/json"
 	"fmt"
 	"github.com/minhtuhcmus/nbh-mono-be/constant"
 	"github.com/minhtuhcmus/nbh-mono-be/domain/models"
@@ -14,6 +15,7 @@ type ItemService interface {
 	GetItem(ctx context.Context) *model.DetailItem
 	GetItemAttribute(ctx context.Context) (*[]*model.OverviewLabel, error)
 	CreateItem(ctx context.Context, itemDetail *model.NewItem) (*model.OverviewItem, error)
+	GetListItem(ctx context.Context, pagination *model.Pagination) (*model.ListItem, error)
 }
 
 type itemService struct {
@@ -23,6 +25,88 @@ type itemService struct {
 	itemAttributeRepository  *repositories.ItemAttributeRepository
 	itemImageRepository      *repositories.ItemImageRepository
 	itemCollectionRepository *repositories.ItemCollectionRepository
+}
+
+func (i itemService) GetListItem(ctx context.Context, pagination *model.Pagination) (*model.ListItem, error) {
+	var listItem = &model.ListItem{
+		Data:      nil,
+		Page:      0,
+		Size:      0,
+		Total:     0,
+		IsEndPage: false,
+	}
+
+	var details []*models.DetailItem
+
+	err := i.itemRepository.GetListItem(ctx, pagination, &listItem.Total, &details)
+	if err != nil {
+		return nil, err
+	}
+
+	if pagination.Page*pagination.Size >= listItem.Total {
+		listItem.IsEndPage = true
+	} else {
+		listItem.IsEndPage = false
+	}
+
+	for _, obj := range details {
+		var attributesRaw []model.OverviewLabel
+		var collectionRaw model.OverviewCollection
+		var imagesRaw []model.OverviewImage
+
+		var attributes []*model.OverviewLabel
+		var collection *model.OverviewCollection
+		var images []*model.OverviewImage
+
+		if obj.Images != nil {
+			err = json.Unmarshal([]byte("["+*obj.Images+"]"), &imagesRaw)
+			if err != nil {
+				return nil, err
+			}
+			for _, img := range imagesRaw {
+				images = append(images, &model.OverviewImage{
+					ID:   img.ID,
+					Link: img.Link,
+				})
+			}
+		}
+
+		if obj.Collection != nil {
+			err = json.Unmarshal([]byte(*obj.Collection), &collectionRaw)
+			if err != nil {
+				return nil, err
+			}
+			collection = &collectionRaw
+		}
+
+		if obj.Attributes != nil {
+			err = json.Unmarshal([]byte("["+*obj.Attributes+"]"), &attributesRaw)
+			if err != nil {
+				return nil, err
+			}
+			for _, attr := range attributesRaw {
+				attributes = append(attributes, &model.OverviewLabel{
+					ID:        attr.ID,
+					Code:      attr.Code,
+					Value:     attr.Value,
+					SubLabels: nil,
+				})
+			}
+		}
+
+		listItem.Data = append(listItem.Data, &model.DetailItem{
+			ID:                obj.ID,
+			Name:              obj.Name,
+			Description:       obj.Description,
+			Order:             obj.Order,
+			Attributes:        attributes,
+			Images:            images,
+			Collection:        collection,
+			OrderInCollection: obj.OrderInCollection,
+		})
+	}
+
+	return listItem, err
 }
 
 func (i itemService) GetItem(ctx context.Context) *model.DetailItem {
@@ -36,7 +120,7 @@ func (i itemService) GetItems(ctx context.Context, filter *model.Pagination) (*[
 	if filter.Keyword != nil {
 		err = i.itemRepository.SearchItemByKeyword(ctx, *filter.Keyword, &items)
 	} else {
-		if filter.Collections != nil {
+		if filter.Collections != nil && len(filter.Collections) > 0 {
 			err = i.collectionRepository.GetItemsInCollections(ctx, filter, &items)
 		} else {
 			err = i.itemRepository.SearchItemByFilter(ctx, filter, &items)

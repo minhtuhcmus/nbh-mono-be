@@ -57,6 +57,11 @@ func (r *queryResolver) Collections(ctx context.Context) ([]*model.OverviewColle
 	return collections, nil
 }
 
+// ListItem is the resolver for the listItem field.
+func (r *queryResolver) ListItem(ctx context.Context, pagination model.Pagination) (*model.ListItem, error) {
+	return r.itemService.GetListItem(ctx, &pagination)
+}
+
 // Mutation returns generated.MutationResolver implementation.
 func (r *Resolver) Mutation() generated.MutationResolver { return &mutationResolver{r} }
 
