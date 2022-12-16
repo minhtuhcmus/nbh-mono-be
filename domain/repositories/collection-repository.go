@@ -46,11 +46,11 @@ func (c *CollectionRepository) GetCollectionsInfo(
 
 func (c *CollectionRepository) GetItemsInCollections(
 	ctx context.Context,
-	pagination *model.Pagination,
+	pagination *model.PaginationFilter,
 	items *[]*models.Item,
 ) error {
 	var err error
-	if pagination.Filter != nil && pagination.Filter.Attributes != nil && len(pagination.Filter.Attributes) > 0 {
+	if pagination.Attributes != nil {
 		err = datastore.
 			GetDB().
 			WithContext(ctx).
@@ -61,7 +61,7 @@ func (c *CollectionRepository) GetItemsInCollections(
 				"INNER JOIN collections c ON ic.fk_collection = c.id "+
 				"WHERE ic.fk_collection in ? AND ia.fk_label IN ? LIMIT ?, ?",
 				pagination.Collections,
-				pagination.Filter.Attributes,
+				pagination.Attributes,
 				pagination.Page*pagination.Size,
 				pagination.Size,
 			).Order("c.`order`, ic.`order`, i.`order`").Scan(&items).Error
@@ -70,7 +70,8 @@ func (c *CollectionRepository) GetItemsInCollections(
 			GetDB().
 			WithContext(ctx).
 			Raw("SELECT DISTINCT items.* "+
-				"FROM items INNER JOIN item_collections ON items.id = item_collections.fk_item "+
+				"FROM items "+
+				"INNER JOIN item_collections ON items.id = item_collections.fk_item "+
 				"INNER JOIN collections ON item_collections.fk_collection = collections.id "+
 				"WHERE item_collections.fk_collection IN ? AND items.active = TRUE AND item_collections.active = TRUE "+
 				"LIMIT ?, ?",

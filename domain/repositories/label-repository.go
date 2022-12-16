@@ -56,3 +56,17 @@ func (l *LabelRepository) GetAllSubAttributesOfGroups(
 	}
 	return nil
 }
+
+func (l *LabelRepository) FetchAllItemAttributes(
+	ctx context.Context,
+	itemAttributeList *[]*models.ItemAttributeWithSubLabels,
+) error {
+	err := datastore.GetDB().WithContext(ctx).Raw("SELECT ml.id, ml.code, ml.value, GROUP_CONCAT(JSON_OBJECT('id', sl.id, 'code', sl.code, 'value', sl.value)) AS labels " +
+		"FROM labels ml LEFT JOIN labels sl ON ml.id = sl.fk_label " +
+		"WHERE ml.fk_label IS NULL AND ml.active = true AND sl.active = true " +
+		"GROUP BY ml.id, ml.code, ml.value").Scan(itemAttributeList).Error
+	if err != nil {
+		return err
+	}
+	return nil
+}

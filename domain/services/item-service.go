@@ -8,14 +8,16 @@ import (
 	"github.com/minhtuhcmus/nbh-mono-be/domain/models"
 	"github.com/minhtuhcmus/nbh-mono-be/domain/repositories"
 	"github.com/minhtuhcmus/nbh-mono-be/graph/model"
+	"sort"
 )
 
 type ItemService interface {
-	GetItems(ctx context.Context, filter *model.Pagination) (*[]*model.OverviewItem, error)
+	GetItems(ctx context.Context, filter *model.PaginationFilter) (*model.ListItem, error)
 	GetItem(ctx context.Context) *model.DetailItem
 	GetItemAttribute(ctx context.Context) (*[]*model.OverviewLabel, error)
+	GetAllItemAttribute(ctx context.Context) (*model.ItemAttributes, error)
 	CreateItem(ctx context.Context, itemDetail *model.NewItem) (*model.OverviewItem, error)
-	GetListItem(ctx context.Context, pagination *model.Pagination) (*model.ListItem, error)
+	GetListDetailItem(ctx context.Context, pagination *model.PaginationFilter) (*model.ListDetailItem, error)
 }
 
 type itemService struct {
@@ -27,8 +29,79 @@ type itemService struct {
 	itemCollectionRepository *repositories.ItemCollectionRepository
 }
 
-func (i itemService) GetListItem(ctx context.Context, pagination *model.Pagination) (*model.ListItem, error) {
-	var listItem = &model.ListItem{
+func (i itemService) GetAllItemAttribute(ctx context.Context) (*model.ItemAttributes, error) {
+	var itemAttributeList []*models.ItemAttributeWithSubLabels
+	err := i.labelRepository.FetchAllItemAttributes(ctx, &itemAttributeList)
+	if err != nil {
+		return nil, err
+	}
+
+	itemAttributes := &model.ItemAttributes{}
+	for _, itAttr := range itemAttributeList {
+		switch itAttr.Code {
+		case constant.ITEM_COLOR_CODE:
+			{
+				err = json.Unmarshal([]byte("["+itAttr.Labels+"]"), &itemAttributes.Colors)
+				if err != nil {
+					return nil, err
+				}
+				sort.Slice(itemAttributes.Colors, func(i, j int) bool {
+					return itemAttributes.Colors[i].ID < itemAttributes.Colors[j].ID
+				})
+				break
+			}
+		case constant.ITEM_ORIGIN_CODE:
+			{
+				err = json.Unmarshal([]byte("["+itAttr.Labels+"]"), &itemAttributes.Origins)
+				if err != nil {
+					return nil, err
+				}
+				sort.Slice(itemAttributes.Origins, func(i, j int) bool {
+					return itemAttributes.Origins[i].ID < itemAttributes.Origins[j].ID
+				})
+				break
+			}
+		case constant.ITEM_SIZE_CODE:
+			{
+				err = json.Unmarshal([]byte("["+itAttr.Labels+"]"), &itemAttributes.Sizes)
+				if err != nil {
+					return nil, err
+				}
+				sort.Slice(itemAttributes.Sizes, func(i, j int) bool {
+					return itemAttributes.Sizes[i].ID < itemAttributes.Sizes[j].ID
+				})
+				break
+			}
+		case constant.ITEM_PRICE_CODE:
+			{
+				err = json.Unmarshal([]byte("["+itAttr.Labels+"]"), &itemAttributes.Prices)
+				if err != nil {
+					return nil, err
+				}
+				sort.Slice(itemAttributes.Prices, func(i, j int) bool {
+					return itemAttributes.Prices[i].ID < itemAttributes.Prices[j].ID
+				})
+				break
+			}
+		case constant.ITEM_AVAILABILITY_CODE:
+			{
+				err = json.Unmarshal([]byte("["+itAttr.Labels+"]"), &itemAttributes.Availability)
+				if err != nil {
+					return nil, err
+				}
+				sort.Slice(itemAttributes.Availability, func(i, j int) bool {
+					return itemAttributes.Availability[i].ID < itemAttributes.Availability[j].ID
+				})
+				break
+			}
+		}
+	}
+
+	return itemAttributes, nil
+}
+
+func (i itemService) GetListDetailItem(ctx context.Context, pagination *model.PaginationFilter) (*model.ListDetailItem, error) {
+	var listItem = &model.ListDetailItem{
 		Data:      nil,
 		Page:      0,
 		Size:      0,
@@ -38,7 +111,7 @@ func (i itemService) GetListItem(ctx context.Context, pagination *model.Paginati
 
 	var details []*models.DetailItem
 
-	err := i.itemRepository.GetListItem(ctx, pagination, &listItem.Total, &details)
+	err := i.itemRepository.GetListDetailItem(ctx, pagination, &listItem.Total, &details)
 	if err != nil {
 		return nil, err
 	}
@@ -114,53 +187,52 @@ func (i itemService) GetItem(ctx context.Context) *model.DetailItem {
 	panic("implement me")
 }
 
-func (i itemService) GetItems(ctx context.Context, filter *model.Pagination) (*[]*model.OverviewItem, error) {
-	var items []*models.Item
-	var err error
-	if filter.Keyword != nil {
-		err = i.itemRepository.SearchItemByKeyword(ctx, *filter.Keyword, &items)
-	} else {
-		if filter.Collections != nil && len(filter.Collections) > 0 {
-			err = i.collectionRepository.GetItemsInCollections(ctx, filter, &items)
-		} else {
-			err = i.itemRepository.SearchItemByFilter(ctx, filter, &items)
-		}
-	}
+func (i itemService) GetItems(ctx context.Context, filter *model.PaginationFilter) (*model.ListItem, error) {
+	listItem := &model.ListItem{
+		Data:      []*model.OverviewItem{},
+		Page:      filter.Page,
+		Size:      filter.Size,
+		Total:     0,
+		IsEndPage: false,
+	} //if filter.Keyword != nil {
+	//	err = i.itemRepository.SearchItemByKeyword(ctx, *filter.Keyword, &items)
+	//} else {
+	//	if filter.Collections != nil && len(filter.Collections) > 0 {
+	//		err = i.collectionRepository.GetItemsInCollections(ctx, filter, &items)
+	//	} else {
+	//		err = i.itemRepository.SearchItemByFilter(ctx, filter, &items)
+	//	}
+	//}
+	var overviewItems []*models.OverviewItem
+	err := i.itemRepository.SearchItemByFilter(ctx, filter, &overviewItems, &listItem.Total)
 	if err != nil {
 		return nil, fmt.Errorf("error itemService.GetItems %v", err)
 	}
 
-	var itemIds []int
-	for _, item := range items {
-		itemIds = append(itemIds, item.ID)
+	if listItem.Total == 0 {
+		listItem.IsEndPage = true
+		listItem.Page = 0
+		listItem.Size = 0
+		return listItem, nil
 	}
 
-	var itemAvatars []*models.ItemAvatar
-
-	err = i.itemRepository.GetAvatarOfItems(ctx, itemIds, &itemAvatars)
-	if err != nil {
-		return nil, fmt.Errorf("error itemService.GetItems %v", err)
-	}
-
-	itemAvatarMap := make(map[int]*model.OverviewImage)
-	for _, itemAvatar := range itemAvatars {
-		itemAvatarMap[itemAvatar.FkItem] = &model.OverviewImage{
-			ID:   itemAvatar.FkImage,
-			Link: itemAvatar.Link,
+	for _, it := range overviewItems {
+		var imageRaw model.OverviewImage
+		if it.Avatar != nil {
+			err = json.Unmarshal([]byte(*it.Avatar), &imageRaw)
+			if err != nil {
+				return nil, err
+			}
 		}
-	}
-
-	var overviewItems []*model.OverviewItem
-
-	for _, item := range items {
-		overviewItems = append(overviewItems, &model.OverviewItem{
-			ID:     item.ID,
-			Name:   item.Name,
-			Avatar: itemAvatarMap[item.ID],
+		listItem.Data = append(listItem.Data, &model.OverviewItem{
+			ID:     it.ID,
+			Name:   it.Name,
+			Avatar: &imageRaw,
+			Price:  nil,
 		})
 	}
 
-	return &overviewItems, nil
+	return listItem, nil
 }
 
 func (i itemService) GetItemAttribute(ctx context.Context) (*[]*model.OverviewLabel, error) {
@@ -220,8 +292,8 @@ func (i itemService) GetItemAttribute(ctx context.Context) (*[]*model.OverviewLa
 
 func (i itemService) CreateItem(ctx context.Context, itemDetail *model.NewItem) (*model.OverviewItem, error) {
 	newItem := &models.Item{
-		Name:       itemDetail.Name,
-		SearchKeys: itemDetail.SearchKeys,
+		Name:       *itemDetail.Name,
+		SearchKeys: *itemDetail.SearchKeys,
 		Active:     true,
 	}
 
@@ -233,7 +305,7 @@ func (i itemService) CreateItem(ctx context.Context, itemDetail *model.NewItem) 
 	var newItemCollection []*models.ItemCollection
 	newItemCollection = append(newItemCollection, &models.ItemCollection{
 		FkItem:       newItem.ID,
-		FkCollection: itemDetail.Type,
+		FkCollection: *itemDetail.Type,
 		Active:       true,
 	})
 	err = i.itemCollectionRepository.SaveItemCollections(ctx, newItemCollection)

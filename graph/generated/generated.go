@@ -56,6 +56,22 @@ type ComplexityRoot struct {
 		OrderInCollection func(childComplexity int) int
 	}
 
+	ItemAttributes struct {
+		Availability func(childComplexity int) int
+		Colors       func(childComplexity int) int
+		Origins      func(childComplexity int) int
+		Prices       func(childComplexity int) int
+		Sizes        func(childComplexity int) int
+	}
+
+	ListDetailItem struct {
+		Data      func(childComplexity int) int
+		IsEndPage func(childComplexity int) int
+		Page      func(childComplexity int) int
+		Size      func(childComplexity int) int
+		Total     func(childComplexity int) int
+	}
+
 	ListItem struct {
 		Data      func(childComplexity int) int
 		IsEndPage func(childComplexity int) int
@@ -89,6 +105,7 @@ type ComplexityRoot struct {
 		Avatar func(childComplexity int) int
 		ID     func(childComplexity int) int
 		Name   func(childComplexity int) int
+		Price  func(childComplexity int) int
 	}
 
 	OverviewLabel struct {
@@ -121,8 +138,8 @@ type ComplexityRoot struct {
 	Query struct {
 		Collections    func(childComplexity int) int
 		ItemAttributes func(childComplexity int) int
-		Items          func(childComplexity int, pagination model.Pagination) int
-		ListItem       func(childComplexity int, pagination model.Pagination) int
+		Items          func(childComplexity int, pagination model.PaginationFilter) int
+		ListDetailItem func(childComplexity int, pagination model.PaginationFilter) int
 	}
 }
 
@@ -131,10 +148,10 @@ type MutationResolver interface {
 	Images(ctx context.Context, newImage []*model.NewImage) ([]*model.OverviewImage, error)
 }
 type QueryResolver interface {
-	Items(ctx context.Context, pagination model.Pagination) ([]*model.OverviewItem, error)
-	ItemAttributes(ctx context.Context) ([]*model.OverviewLabel, error)
+	Items(ctx context.Context, pagination model.PaginationFilter) (*model.ListItem, error)
+	ItemAttributes(ctx context.Context) (*model.ItemAttributes, error)
 	Collections(ctx context.Context) ([]*model.OverviewCollection, error)
-	ListItem(ctx context.Context, pagination model.Pagination) (*model.ListItem, error)
+	ListDetailItem(ctx context.Context, pagination model.PaginationFilter) (*model.ListDetailItem, error)
 }
 
 type executableSchema struct {
@@ -207,6 +224,76 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 		}
 
 		return e.complexity.DetailItem.OrderInCollection(childComplexity), true
+
+	case "ItemAttributes.availability":
+		if e.complexity.ItemAttributes.Availability == nil {
+			break
+		}
+
+		return e.complexity.ItemAttributes.Availability(childComplexity), true
+
+	case "ItemAttributes.colors":
+		if e.complexity.ItemAttributes.Colors == nil {
+			break
+		}
+
+		return e.complexity.ItemAttributes.Colors(childComplexity), true
+
+	case "ItemAttributes.origins":
+		if e.complexity.ItemAttributes.Origins == nil {
+			break
+		}
+
+		return e.complexity.ItemAttributes.Origins(childComplexity), true
+
+	case "ItemAttributes.prices":
+		if e.complexity.ItemAttributes.Prices == nil {
+			break
+		}
+
+		return e.complexity.ItemAttributes.Prices(childComplexity), true
+
+	case "ItemAttributes.sizes":
+		if e.complexity.ItemAttributes.Sizes == nil {
+			break
+		}
+
+		return e.complexity.ItemAttributes.Sizes(childComplexity), true
+
+	case "ListDetailItem.data":
+		if e.complexity.ListDetailItem.Data == nil {
+			break
+		}
+
+		return e.complexity.ListDetailItem.Data(childComplexity), true
+
+	case "ListDetailItem.isEndPage":
+		if e.complexity.ListDetailItem.IsEndPage == nil {
+			break
+		}
+
+		return e.complexity.ListDetailItem.IsEndPage(childComplexity), true
+
+	case "ListDetailItem.page":
+		if e.complexity.ListDetailItem.Page == nil {
+			break
+		}
+
+		return e.complexity.ListDetailItem.Page(childComplexity), true
+
+	case "ListDetailItem.size":
+		if e.complexity.ListDetailItem.Size == nil {
+			break
+		}
+
+		return e.complexity.ListDetailItem.Size(childComplexity), true
+
+	case "ListDetailItem.total":
+		if e.complexity.ListDetailItem.Total == nil {
+			break
+		}
+
+		return e.complexity.ListDetailItem.Total(childComplexity), true
 
 	case "ListItem.data":
 		if e.complexity.ListItem.Data == nil {
@@ -336,6 +423,13 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 		}
 
 		return e.complexity.OverviewItem.Name(childComplexity), true
+
+	case "OverviewItem.price":
+		if e.complexity.OverviewItem.Price == nil {
+			break
+		}
+
+		return e.complexity.OverviewItem.Price(childComplexity), true
 
 	case "OverviewLabel.code":
 		if e.complexity.OverviewLabel.Code == nil {
@@ -487,19 +581,19 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 			return 0, false
 		}
 
-		return e.complexity.Query.Items(childComplexity, args["pagination"].(model.Pagination)), true
+		return e.complexity.Query.Items(childComplexity, args["pagination"].(model.PaginationFilter)), true
 
-	case "Query.listItem":
-		if e.complexity.Query.ListItem == nil {
+	case "Query.listDetailItem":
+		if e.complexity.Query.ListDetailItem == nil {
 			break
 		}
 
-		args, err := ec.field_Query_listItem_args(context.TODO(), rawArgs)
+		args, err := ec.field_Query_listDetailItem_args(context.TODO(), rawArgs)
 		if err != nil {
 			return 0, false
 		}
 
-		return e.complexity.Query.ListItem(childComplexity, args["pagination"].(model.Pagination)), true
+		return e.complexity.Query.ListDetailItem(childComplexity, args["pagination"].(model.PaginationFilter)), true
 
 	}
 	return 0, false
@@ -509,13 +603,13 @@ func (e *executableSchema) Exec(ctx context.Context) graphql.ResponseHandler {
 	rc := graphql.GetOperationContext(ctx)
 	ec := executionContext{rc, e}
 	inputUnmarshalMap := graphql.BuildUnmarshalerMap(
-		ec.unmarshalInputItemFilter,
+		ec.unmarshalInputAttributesFilter,
 		ec.unmarshalInputNewImage,
 		ec.unmarshalInputNewItem,
 		ec.unmarshalInputNewLabel,
 		ec.unmarshalInputNewRole,
 		ec.unmarshalInputNewUser,
-		ec.unmarshalInputPagination,
+		ec.unmarshalInputPaginationFilter,
 	)
 	first := true
 
@@ -576,16 +670,20 @@ func (ec *executionContext) introspectType(name string) (*introspection.Type, er
 }
 
 var sources = []*ast.Source{
-	{Name: "../schemas/common.schema.graphqls", Input: `input ItemFilter {
-    attributes: [Int!]
-}
-
-input Pagination {
+	{Name: "../schemas/common.schema.graphqls", Input: `input PaginationFilter {
     collections: [Int!]
     page: Int!
     size: Int!
     keyword: String
-    filter: ItemFilter
+    attributes: AttributesFilter
+}
+
+input AttributesFilter {
+    colors: [Int!]
+    origins: [Int!]
+    sizes: [Int!]
+    availability: [Int!]
+    prices: [Int!]
 }`, BuiltIn: false},
 	{Name: "../schemas/image.schema.graphqls", Input: `input NewImage {
     link: String!
@@ -597,12 +695,12 @@ type OverviewImage {
 }`, BuiltIn: false},
 	{Name: "../schemas/item.schema.graphqls", Input: `input NewItem {
    id: Int
-   name: String!
-   searchKeys: String!
+   name: String
+   searchKeys: String
    description: String
    attributes: [Int!]
    images:[Int!]
-   type: Int!
+   type: Int
 }
 
 type DetailItem {
@@ -620,6 +718,7 @@ type OverviewItem {
    id: Int!
    name: String!
    avatar: OverviewImage
+   price: OverviewLabel
 }
 
 type NewCollection {
@@ -633,12 +732,28 @@ type OverviewCollection {
    totalItem: Int!
 }
 
-type ListItem {
+type ListDetailItem {
    data: [DetailItem!]
    page: Int!
    size: Int!
    total: Int!
    isEndPage: Boolean!
+}
+
+type ListItem{
+   data: [OverviewItem!]
+   page: Int!
+   size: Int!
+   total: Int!
+   isEndPage: Boolean!
+}
+
+type ItemAttributes {
+   colors: [OverviewLabel!]
+   origins: [OverviewLabel!]
+   sizes: [OverviewLabel!]
+   prices: [OverviewLabel!]
+   availability: [OverviewLabel!]
 }`, BuiltIn: false},
 	{Name: "../schemas/label.schema.graphqls", Input: `type OverviewLabel {
   id: Int!
@@ -673,10 +788,10 @@ type Query {
 #  user(id: Int!): OverviewUser!
 #  users(pagination: Pagination!): [OverviewUser!]!
 #  item(id: Int!): OverviewItem!
-  items(pagination: Pagination!): [OverviewItem!]
-  itemAttributes: [OverviewLabel!]
+  items(pagination: PaginationFilter!): ListItem!
+  itemAttributes: ItemAttributes
   collections: [OverviewCollection!]
-  listItem(pagination: Pagination!): ListItem!
+  listDetailItem(pagination: PaginationFilter!): ListDetailItem!
 #  me: OverviewUser!
 }
 
@@ -774,10 +889,10 @@ func (ec *executionContext) field_Query___type_args(ctx context.Context, rawArgs
 func (ec *executionContext) field_Query_items_args(ctx context.Context, rawArgs map[string]interface{}) (map[string]interface{}, error) {
 	var err error
 	args := map[string]interface{}{}
-	var arg0 model.Pagination
+	var arg0 model.PaginationFilter
 	if tmp, ok := rawArgs["pagination"]; ok {
 		ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("pagination"))
-		arg0, err = ec.unmarshalNPagination2githubᚗcomᚋminhtuhcmusᚋnbhᚑmonoᚑbeᚋgraphᚋmodelᚐPagination(ctx, tmp)
+		arg0, err = ec.unmarshalNPaginationFilter2githubᚗcomᚋminhtuhcmusᚋnbhᚑmonoᚑbeᚋgraphᚋmodelᚐPaginationFilter(ctx, tmp)
 		if err != nil {
 			return nil, err
 		}
@@ -786,13 +901,13 @@ func (ec *executionContext) field_Query_items_args(ctx context.Context, rawArgs 
 	return args, nil
 }
 
-func (ec *executionContext) field_Query_listItem_args(ctx context.Context, rawArgs map[string]interface{}) (map[string]interface{}, error) {
+func (ec *executionContext) field_Query_listDetailItem_args(ctx context.Context, rawArgs map[string]interface{}) (map[string]interface{}, error) {
 	var err error
 	args := map[string]interface{}{}
-	var arg0 model.Pagination
+	var arg0 model.PaginationFilter
 	if tmp, ok := rawArgs["pagination"]; ok {
 		ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("pagination"))
-		arg0, err = ec.unmarshalNPagination2githubᚗcomᚋminhtuhcmusᚋnbhᚑmonoᚑbeᚋgraphᚋmodelᚐPagination(ctx, tmp)
+		arg0, err = ec.unmarshalNPaginationFilter2githubᚗcomᚋminhtuhcmusᚋnbhᚑmonoᚑbeᚋgraphᚋmodelᚐPaginationFilter(ctx, tmp)
 		if err != nil {
 			return nil, err
 		}
@@ -1208,8 +1323,263 @@ func (ec *executionContext) fieldContext_DetailItem_orderInCollection(ctx contex
 	return fc, nil
 }
 
-func (ec *executionContext) _ListItem_data(ctx context.Context, field graphql.CollectedField, obj *model.ListItem) (ret graphql.Marshaler) {
-	fc, err := ec.fieldContext_ListItem_data(ctx, field)
+func (ec *executionContext) _ItemAttributes_colors(ctx context.Context, field graphql.CollectedField, obj *model.ItemAttributes) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_ItemAttributes_colors(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.Colors, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		return graphql.Null
+	}
+	res := resTmp.([]*model.OverviewLabel)
+	fc.Result = res
+	return ec.marshalOOverviewLabel2ᚕᚖgithubᚗcomᚋminhtuhcmusᚋnbhᚑmonoᚑbeᚋgraphᚋmodelᚐOverviewLabelᚄ(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_ItemAttributes_colors(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "ItemAttributes",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			switch field.Name {
+			case "id":
+				return ec.fieldContext_OverviewLabel_id(ctx, field)
+			case "code":
+				return ec.fieldContext_OverviewLabel_code(ctx, field)
+			case "value":
+				return ec.fieldContext_OverviewLabel_value(ctx, field)
+			case "subLabels":
+				return ec.fieldContext_OverviewLabel_subLabels(ctx, field)
+			}
+			return nil, fmt.Errorf("no field named %q was found under type OverviewLabel", field.Name)
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _ItemAttributes_origins(ctx context.Context, field graphql.CollectedField, obj *model.ItemAttributes) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_ItemAttributes_origins(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.Origins, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		return graphql.Null
+	}
+	res := resTmp.([]*model.OverviewLabel)
+	fc.Result = res
+	return ec.marshalOOverviewLabel2ᚕᚖgithubᚗcomᚋminhtuhcmusᚋnbhᚑmonoᚑbeᚋgraphᚋmodelᚐOverviewLabelᚄ(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_ItemAttributes_origins(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "ItemAttributes",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			switch field.Name {
+			case "id":
+				return ec.fieldContext_OverviewLabel_id(ctx, field)
+			case "code":
+				return ec.fieldContext_OverviewLabel_code(ctx, field)
+			case "value":
+				return ec.fieldContext_OverviewLabel_value(ctx, field)
+			case "subLabels":
+				return ec.fieldContext_OverviewLabel_subLabels(ctx, field)
+			}
+			return nil, fmt.Errorf("no field named %q was found under type OverviewLabel", field.Name)
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _ItemAttributes_sizes(ctx context.Context, field graphql.CollectedField, obj *model.ItemAttributes) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_ItemAttributes_sizes(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.Sizes, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		return graphql.Null
+	}
+	res := resTmp.([]*model.OverviewLabel)
+	fc.Result = res
+	return ec.marshalOOverviewLabel2ᚕᚖgithubᚗcomᚋminhtuhcmusᚋnbhᚑmonoᚑbeᚋgraphᚋmodelᚐOverviewLabelᚄ(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_ItemAttributes_sizes(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "ItemAttributes",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			switch field.Name {
+			case "id":
+				return ec.fieldContext_OverviewLabel_id(ctx, field)
+			case "code":
+				return ec.fieldContext_OverviewLabel_code(ctx, field)
+			case "value":
+				return ec.fieldContext_OverviewLabel_value(ctx, field)
+			case "subLabels":
+				return ec.fieldContext_OverviewLabel_subLabels(ctx, field)
+			}
+			return nil, fmt.Errorf("no field named %q was found under type OverviewLabel", field.Name)
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _ItemAttributes_prices(ctx context.Context, field graphql.CollectedField, obj *model.ItemAttributes) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_ItemAttributes_prices(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.Prices, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		return graphql.Null
+	}
+	res := resTmp.([]*model.OverviewLabel)
+	fc.Result = res
+	return ec.marshalOOverviewLabel2ᚕᚖgithubᚗcomᚋminhtuhcmusᚋnbhᚑmonoᚑbeᚋgraphᚋmodelᚐOverviewLabelᚄ(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_ItemAttributes_prices(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "ItemAttributes",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			switch field.Name {
+			case "id":
+				return ec.fieldContext_OverviewLabel_id(ctx, field)
+			case "code":
+				return ec.fieldContext_OverviewLabel_code(ctx, field)
+			case "value":
+				return ec.fieldContext_OverviewLabel_value(ctx, field)
+			case "subLabels":
+				return ec.fieldContext_OverviewLabel_subLabels(ctx, field)
+			}
+			return nil, fmt.Errorf("no field named %q was found under type OverviewLabel", field.Name)
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _ItemAttributes_availability(ctx context.Context, field graphql.CollectedField, obj *model.ItemAttributes) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_ItemAttributes_availability(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.Availability, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		return graphql.Null
+	}
+	res := resTmp.([]*model.OverviewLabel)
+	fc.Result = res
+	return ec.marshalOOverviewLabel2ᚕᚖgithubᚗcomᚋminhtuhcmusᚋnbhᚑmonoᚑbeᚋgraphᚋmodelᚐOverviewLabelᚄ(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_ItemAttributes_availability(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "ItemAttributes",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			switch field.Name {
+			case "id":
+				return ec.fieldContext_OverviewLabel_id(ctx, field)
+			case "code":
+				return ec.fieldContext_OverviewLabel_code(ctx, field)
+			case "value":
+				return ec.fieldContext_OverviewLabel_value(ctx, field)
+			case "subLabels":
+				return ec.fieldContext_OverviewLabel_subLabels(ctx, field)
+			}
+			return nil, fmt.Errorf("no field named %q was found under type OverviewLabel", field.Name)
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _ListDetailItem_data(ctx context.Context, field graphql.CollectedField, obj *model.ListDetailItem) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_ListDetailItem_data(ctx, field)
 	if err != nil {
 		return graphql.Null
 	}
@@ -1236,9 +1606,9 @@ func (ec *executionContext) _ListItem_data(ctx context.Context, field graphql.Co
 	return ec.marshalODetailItem2ᚕᚖgithubᚗcomᚋminhtuhcmusᚋnbhᚑmonoᚑbeᚋgraphᚋmodelᚐDetailItemᚄ(ctx, field.Selections, res)
 }
 
-func (ec *executionContext) fieldContext_ListItem_data(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+func (ec *executionContext) fieldContext_ListDetailItem_data(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
 	fc = &graphql.FieldContext{
-		Object:     "ListItem",
+		Object:     "ListDetailItem",
 		Field:      field,
 		IsMethod:   false,
 		IsResolver: false,
@@ -1262,6 +1632,233 @@ func (ec *executionContext) fieldContext_ListItem_data(ctx context.Context, fiel
 				return ec.fieldContext_DetailItem_orderInCollection(ctx, field)
 			}
 			return nil, fmt.Errorf("no field named %q was found under type DetailItem", field.Name)
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _ListDetailItem_page(ctx context.Context, field graphql.CollectedField, obj *model.ListDetailItem) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_ListDetailItem_page(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.Page, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.(int)
+	fc.Result = res
+	return ec.marshalNInt2int(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_ListDetailItem_page(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "ListDetailItem",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type Int does not have child fields")
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _ListDetailItem_size(ctx context.Context, field graphql.CollectedField, obj *model.ListDetailItem) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_ListDetailItem_size(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.Size, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.(int)
+	fc.Result = res
+	return ec.marshalNInt2int(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_ListDetailItem_size(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "ListDetailItem",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type Int does not have child fields")
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _ListDetailItem_total(ctx context.Context, field graphql.CollectedField, obj *model.ListDetailItem) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_ListDetailItem_total(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.Total, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.(int)
+	fc.Result = res
+	return ec.marshalNInt2int(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_ListDetailItem_total(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "ListDetailItem",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type Int does not have child fields")
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _ListDetailItem_isEndPage(ctx context.Context, field graphql.CollectedField, obj *model.ListDetailItem) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_ListDetailItem_isEndPage(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.IsEndPage, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.(bool)
+	fc.Result = res
+	return ec.marshalNBoolean2bool(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_ListDetailItem_isEndPage(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "ListDetailItem",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type Boolean does not have child fields")
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _ListItem_data(ctx context.Context, field graphql.CollectedField, obj *model.ListItem) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_ListItem_data(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.Data, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		return graphql.Null
+	}
+	res := resTmp.([]*model.OverviewItem)
+	fc.Result = res
+	return ec.marshalOOverviewItem2ᚕᚖgithubᚗcomᚋminhtuhcmusᚋnbhᚑmonoᚑbeᚋgraphᚋmodelᚐOverviewItemᚄ(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_ListItem_data(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "ListItem",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			switch field.Name {
+			case "id":
+				return ec.fieldContext_OverviewItem_id(ctx, field)
+			case "name":
+				return ec.fieldContext_OverviewItem_name(ctx, field)
+			case "avatar":
+				return ec.fieldContext_OverviewItem_avatar(ctx, field)
+			case "price":
+				return ec.fieldContext_OverviewItem_price(ctx, field)
+			}
+			return nil, fmt.Errorf("no field named %q was found under type OverviewItem", field.Name)
 		},
 	}
 	return fc, nil
@@ -1488,6 +2085,8 @@ func (ec *executionContext) fieldContext_Mutation_item(ctx context.Context, fiel
 				return ec.fieldContext_OverviewItem_name(ctx, field)
 			case "avatar":
 				return ec.fieldContext_OverviewItem_avatar(ctx, field)
+			case "price":
+				return ec.fieldContext_OverviewItem_price(ctx, field)
 			}
 			return nil, fmt.Errorf("no field named %q was found under type OverviewItem", field.Name)
 		},
@@ -2005,6 +2604,57 @@ func (ec *executionContext) fieldContext_OverviewItem_avatar(ctx context.Context
 				return ec.fieldContext_OverviewImage_link(ctx, field)
 			}
 			return nil, fmt.Errorf("no field named %q was found under type OverviewImage", field.Name)
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _OverviewItem_price(ctx context.Context, field graphql.CollectedField, obj *model.OverviewItem) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_OverviewItem_price(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.Price, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		return graphql.Null
+	}
+	res := resTmp.(*model.OverviewLabel)
+	fc.Result = res
+	return ec.marshalOOverviewLabel2ᚖgithubᚗcomᚋminhtuhcmusᚋnbhᚑmonoᚑbeᚋgraphᚋmodelᚐOverviewLabel(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_OverviewItem_price(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "OverviewItem",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			switch field.Name {
+			case "id":
+				return ec.fieldContext_OverviewLabel_id(ctx, field)
+			case "code":
+				return ec.fieldContext_OverviewLabel_code(ctx, field)
+			case "value":
+				return ec.fieldContext_OverviewLabel_value(ctx, field)
+			case "subLabels":
+				return ec.fieldContext_OverviewLabel_subLabels(ctx, field)
+			}
+			return nil, fmt.Errorf("no field named %q was found under type OverviewLabel", field.Name)
 		},
 	}
 	return fc, nil
@@ -2848,18 +3498,21 @@ func (ec *executionContext) _Query_items(ctx context.Context, field graphql.Coll
 	}()
 	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
 		ctx = rctx // use context from middleware stack in children
-		return ec.resolvers.Query().Items(rctx, fc.Args["pagination"].(model.Pagination))
+		return ec.resolvers.Query().Items(rctx, fc.Args["pagination"].(model.PaginationFilter))
 	})
 	if err != nil {
 		ec.Error(ctx, err)
 		return graphql.Null
 	}
 	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
 		return graphql.Null
 	}
-	res := resTmp.([]*model.OverviewItem)
+	res := resTmp.(*model.ListItem)
 	fc.Result = res
-	return ec.marshalOOverviewItem2ᚕᚖgithubᚗcomᚋminhtuhcmusᚋnbhᚑmonoᚑbeᚋgraphᚋmodelᚐOverviewItemᚄ(ctx, field.Selections, res)
+	return ec.marshalNListItem2ᚖgithubᚗcomᚋminhtuhcmusᚋnbhᚑmonoᚑbeᚋgraphᚋmodelᚐListItem(ctx, field.Selections, res)
 }
 
 func (ec *executionContext) fieldContext_Query_items(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
@@ -2870,14 +3523,18 @@ func (ec *executionContext) fieldContext_Query_items(ctx context.Context, field 
 		IsResolver: true,
 		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
 			switch field.Name {
-			case "id":
-				return ec.fieldContext_OverviewItem_id(ctx, field)
-			case "name":
-				return ec.fieldContext_OverviewItem_name(ctx, field)
-			case "avatar":
-				return ec.fieldContext_OverviewItem_avatar(ctx, field)
+			case "data":
+				return ec.fieldContext_ListItem_data(ctx, field)
+			case "page":
+				return ec.fieldContext_ListItem_page(ctx, field)
+			case "size":
+				return ec.fieldContext_ListItem_size(ctx, field)
+			case "total":
+				return ec.fieldContext_ListItem_total(ctx, field)
+			case "isEndPage":
+				return ec.fieldContext_ListItem_isEndPage(ctx, field)
 			}
-			return nil, fmt.Errorf("no field named %q was found under type OverviewItem", field.Name)
+			return nil, fmt.Errorf("no field named %q was found under type ListItem", field.Name)
 		},
 	}
 	defer func() {
@@ -2917,9 +3574,9 @@ func (ec *executionContext) _Query_itemAttributes(ctx context.Context, field gra
 	if resTmp == nil {
 		return graphql.Null
 	}
-	res := resTmp.([]*model.OverviewLabel)
+	res := resTmp.(*model.ItemAttributes)
 	fc.Result = res
-	return ec.marshalOOverviewLabel2ᚕᚖgithubᚗcomᚋminhtuhcmusᚋnbhᚑmonoᚑbeᚋgraphᚋmodelᚐOverviewLabelᚄ(ctx, field.Selections, res)
+	return ec.marshalOItemAttributes2ᚖgithubᚗcomᚋminhtuhcmusᚋnbhᚑmonoᚑbeᚋgraphᚋmodelᚐItemAttributes(ctx, field.Selections, res)
 }
 
 func (ec *executionContext) fieldContext_Query_itemAttributes(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
@@ -2930,16 +3587,18 @@ func (ec *executionContext) fieldContext_Query_itemAttributes(ctx context.Contex
 		IsResolver: true,
 		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
 			switch field.Name {
-			case "id":
-				return ec.fieldContext_OverviewLabel_id(ctx, field)
-			case "code":
-				return ec.fieldContext_OverviewLabel_code(ctx, field)
-			case "value":
-				return ec.fieldContext_OverviewLabel_value(ctx, field)
-			case "subLabels":
-				return ec.fieldContext_OverviewLabel_subLabels(ctx, field)
+			case "colors":
+				return ec.fieldContext_ItemAttributes_colors(ctx, field)
+			case "origins":
+				return ec.fieldContext_ItemAttributes_origins(ctx, field)
+			case "sizes":
+				return ec.fieldContext_ItemAttributes_sizes(ctx, field)
+			case "prices":
+				return ec.fieldContext_ItemAttributes_prices(ctx, field)
+			case "availability":
+				return ec.fieldContext_ItemAttributes_availability(ctx, field)
 			}
-			return nil, fmt.Errorf("no field named %q was found under type OverviewLabel", field.Name)
+			return nil, fmt.Errorf("no field named %q was found under type ItemAttributes", field.Name)
 		},
 	}
 	return fc, nil
@@ -2996,8 +3655,8 @@ func (ec *executionContext) fieldContext_Query_collections(ctx context.Context, 
 	return fc, nil
 }
 
-func (ec *executionContext) _Query_listItem(ctx context.Context, field graphql.CollectedField) (ret graphql.Marshaler) {
-	fc, err := ec.fieldContext_Query_listItem(ctx, field)
+func (ec *executionContext) _Query_listDetailItem(ctx context.Context, field graphql.CollectedField) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_Query_listDetailItem(ctx, field)
 	if err != nil {
 		return graphql.Null
 	}
@@ -3010,7 +3669,7 @@ func (ec *executionContext) _Query_listItem(ctx context.Context, field graphql.C
 	}()
 	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
 		ctx = rctx // use context from middleware stack in children
-		return ec.resolvers.Query().ListItem(rctx, fc.Args["pagination"].(model.Pagination))
+		return ec.resolvers.Query().ListDetailItem(rctx, fc.Args["pagination"].(model.PaginationFilter))
 	})
 	if err != nil {
 		ec.Error(ctx, err)
@@ -3022,12 +3681,12 @@ func (ec *executionContext) _Query_listItem(ctx context.Context, field graphql.C
 		}
 		return graphql.Null
 	}
-	res := resTmp.(*model.ListItem)
+	res := resTmp.(*model.ListDetailItem)
 	fc.Result = res
-	return ec.marshalNListItem2ᚖgithubᚗcomᚋminhtuhcmusᚋnbhᚑmonoᚑbeᚋgraphᚋmodelᚐListItem(ctx, field.Selections, res)
+	return ec.marshalNListDetailItem2ᚖgithubᚗcomᚋminhtuhcmusᚋnbhᚑmonoᚑbeᚋgraphᚋmodelᚐListDetailItem(ctx, field.Selections, res)
 }
 
-func (ec *executionContext) fieldContext_Query_listItem(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+func (ec *executionContext) fieldContext_Query_listDetailItem(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
 	fc = &graphql.FieldContext{
 		Object:     "Query",
 		Field:      field,
@@ -3036,17 +3695,17 @@ func (ec *executionContext) fieldContext_Query_listItem(ctx context.Context, fie
 		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
 			switch field.Name {
 			case "data":
-				return ec.fieldContext_ListItem_data(ctx, field)
+				return ec.fieldContext_ListDetailItem_data(ctx, field)
 			case "page":
-				return ec.fieldContext_ListItem_page(ctx, field)
+				return ec.fieldContext_ListDetailItem_page(ctx, field)
 			case "size":
-				return ec.fieldContext_ListItem_size(ctx, field)
+				return ec.fieldContext_ListDetailItem_size(ctx, field)
 			case "total":
-				return ec.fieldContext_ListItem_total(ctx, field)
+				return ec.fieldContext_ListDetailItem_total(ctx, field)
 			case "isEndPage":
-				return ec.fieldContext_ListItem_isEndPage(ctx, field)
+				return ec.fieldContext_ListDetailItem_isEndPage(ctx, field)
 			}
-			return nil, fmt.Errorf("no field named %q was found under type ListItem", field.Name)
+			return nil, fmt.Errorf("no field named %q was found under type ListDetailItem", field.Name)
 		},
 	}
 	defer func() {
@@ -3056,7 +3715,7 @@ func (ec *executionContext) fieldContext_Query_listItem(ctx context.Context, fie
 		}
 	}()
 	ctx = graphql.WithFieldContext(ctx, fc)
-	if fc.Args, err = ec.field_Query_listItem_args(ctx, field.ArgumentMap(ec.Variables)); err != nil {
+	if fc.Args, err = ec.field_Query_listDetailItem_args(ctx, field.ArgumentMap(ec.Variables)); err != nil {
 		ec.Error(ctx, err)
 		return
 	}
@@ -4965,25 +5624,57 @@ func (ec *executionContext) fieldContext___Type_specifiedByURL(ctx context.Conte
 
 // region    **************************** input.gotpl *****************************
 
-func (ec *executionContext) unmarshalInputItemFilter(ctx context.Context, obj interface{}) (model.ItemFilter, error) {
-	var it model.ItemFilter
+func (ec *executionContext) unmarshalInputAttributesFilter(ctx context.Context, obj interface{}) (model.AttributesFilter, error) {
+	var it model.AttributesFilter
 	asMap := map[string]interface{}{}
 	for k, v := range obj.(map[string]interface{}) {
 		asMap[k] = v
 	}
 
-	fieldsInOrder := [...]string{"attributes"}
+	fieldsInOrder := [...]string{"colors", "origins", "sizes", "availability", "prices"}
 	for _, k := range fieldsInOrder {
 		v, ok := asMap[k]
 		if !ok {
 			continue
 		}
 		switch k {
-		case "attributes":
+		case "colors":
 			var err error
 
-			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("attributes"))
-			it.Attributes, err = ec.unmarshalOInt2ᚕintᚄ(ctx, v)
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("colors"))
+			it.Colors, err = ec.unmarshalOInt2ᚕintᚄ(ctx, v)
+			if err != nil {
+				return it, err
+			}
+		case "origins":
+			var err error
+
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("origins"))
+			it.Origins, err = ec.unmarshalOInt2ᚕintᚄ(ctx, v)
+			if err != nil {
+				return it, err
+			}
+		case "sizes":
+			var err error
+
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("sizes"))
+			it.Sizes, err = ec.unmarshalOInt2ᚕintᚄ(ctx, v)
+			if err != nil {
+				return it, err
+			}
+		case "availability":
+			var err error
+
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("availability"))
+			it.Availability, err = ec.unmarshalOInt2ᚕintᚄ(ctx, v)
+			if err != nil {
+				return it, err
+			}
+		case "prices":
+			var err error
+
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("prices"))
+			it.Prices, err = ec.unmarshalOInt2ᚕintᚄ(ctx, v)
 			if err != nil {
 				return it, err
 			}
@@ -5047,7 +5738,7 @@ func (ec *executionContext) unmarshalInputNewItem(ctx context.Context, obj inter
 			var err error
 
 			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("name"))
-			it.Name, err = ec.unmarshalNString2string(ctx, v)
+			it.Name, err = ec.unmarshalOString2ᚖstring(ctx, v)
 			if err != nil {
 				return it, err
 			}
@@ -5055,7 +5746,7 @@ func (ec *executionContext) unmarshalInputNewItem(ctx context.Context, obj inter
 			var err error
 
 			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("searchKeys"))
-			it.SearchKeys, err = ec.unmarshalNString2string(ctx, v)
+			it.SearchKeys, err = ec.unmarshalOString2ᚖstring(ctx, v)
 			if err != nil {
 				return it, err
 			}
@@ -5087,7 +5778,7 @@ func (ec *executionContext) unmarshalInputNewItem(ctx context.Context, obj inter
 			var err error
 
 			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("type"))
-			it.Type, err = ec.unmarshalNInt2int(ctx, v)
+			it.Type, err = ec.unmarshalOInt2ᚖint(ctx, v)
 			if err != nil {
 				return it, err
 			}
@@ -5285,14 +5976,14 @@ func (ec *executionContext) unmarshalInputNewUser(ctx context.Context, obj inter
 	return it, nil
 }
 
-func (ec *executionContext) unmarshalInputPagination(ctx context.Context, obj interface{}) (model.Pagination, error) {
-	var it model.Pagination
+func (ec *executionContext) unmarshalInputPaginationFilter(ctx context.Context, obj interface{}) (model.PaginationFilter, error) {
+	var it model.PaginationFilter
 	asMap := map[string]interface{}{}
 	for k, v := range obj.(map[string]interface{}) {
 		asMap[k] = v
 	}
 
-	fieldsInOrder := [...]string{"collections", "page", "size", "keyword", "filter"}
+	fieldsInOrder := [...]string{"collections", "page", "size", "keyword", "attributes"}
 	for _, k := range fieldsInOrder {
 		v, ok := asMap[k]
 		if !ok {
@@ -5331,11 +6022,11 @@ func (ec *executionContext) unmarshalInputPagination(ctx context.Context, obj in
 			if err != nil {
 				return it, err
 			}
-		case "filter":
+		case "attributes":
 			var err error
 
-			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("filter"))
-			it.Filter, err = ec.unmarshalOItemFilter2ᚖgithubᚗcomᚋminhtuhcmusᚋnbhᚑmonoᚑbeᚋgraphᚋmodelᚐItemFilter(ctx, v)
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("attributes"))
+			it.Attributes, err = ec.unmarshalOAttributesFilter2ᚖgithubᚗcomᚋminhtuhcmusᚋnbhᚑmonoᚑbeᚋgraphᚋmodelᚐAttributesFilter(ctx, v)
 			if err != nil {
 				return it, err
 			}
@@ -5406,6 +6097,100 @@ func (ec *executionContext) _DetailItem(ctx context.Context, sel ast.SelectionSe
 		case "orderInCollection":
 
 			out.Values[i] = ec._DetailItem_orderInCollection(ctx, field, obj)
+
+			if out.Values[i] == graphql.Null {
+				invalids++
+			}
+		default:
+			panic("unknown field " + strconv.Quote(field.Name))
+		}
+	}
+	out.Dispatch()
+	if invalids > 0 {
+		return graphql.Null
+	}
+	return out
+}
+
+var itemAttributesImplementors = []string{"ItemAttributes"}
+
+func (ec *executionContext) _ItemAttributes(ctx context.Context, sel ast.SelectionSet, obj *model.ItemAttributes) graphql.Marshaler {
+	fields := graphql.CollectFields(ec.OperationContext, sel, itemAttributesImplementors)
+	out := graphql.NewFieldSet(fields)
+	var invalids uint32
+	for i, field := range fields {
+		switch field.Name {
+		case "__typename":
+			out.Values[i] = graphql.MarshalString("ItemAttributes")
+		case "colors":
+
+			out.Values[i] = ec._ItemAttributes_colors(ctx, field, obj)
+
+		case "origins":
+
+			out.Values[i] = ec._ItemAttributes_origins(ctx, field, obj)
+
+		case "sizes":
+
+			out.Values[i] = ec._ItemAttributes_sizes(ctx, field, obj)
+
+		case "prices":
+
+			out.Values[i] = ec._ItemAttributes_prices(ctx, field, obj)
+
+		case "availability":
+
+			out.Values[i] = ec._ItemAttributes_availability(ctx, field, obj)
+
+		default:
+			panic("unknown field " + strconv.Quote(field.Name))
+		}
+	}
+	out.Dispatch()
+	if invalids > 0 {
+		return graphql.Null
+	}
+	return out
+}
+
+var listDetailItemImplementors = []string{"ListDetailItem"}
+
+func (ec *executionContext) _ListDetailItem(ctx context.Context, sel ast.SelectionSet, obj *model.ListDetailItem) graphql.Marshaler {
+	fields := graphql.CollectFields(ec.OperationContext, sel, listDetailItemImplementors)
+	out := graphql.NewFieldSet(fields)
+	var invalids uint32
+	for i, field := range fields {
+		switch field.Name {
+		case "__typename":
+			out.Values[i] = graphql.MarshalString("ListDetailItem")
+		case "data":
+
+			out.Values[i] = ec._ListDetailItem_data(ctx, field, obj)
+
+		case "page":
+
+			out.Values[i] = ec._ListDetailItem_page(ctx, field, obj)
+
+			if out.Values[i] == graphql.Null {
+				invalids++
+			}
+		case "size":
+
+			out.Values[i] = ec._ListDetailItem_size(ctx, field, obj)
+
+			if out.Values[i] == graphql.Null {
+				invalids++
+			}
+		case "total":
+
+			out.Values[i] = ec._ListDetailItem_total(ctx, field, obj)
+
+			if out.Values[i] == graphql.Null {
+				invalids++
+			}
+		case "isEndPage":
+
+			out.Values[i] = ec._ListDetailItem_isEndPage(ctx, field, obj)
 
 			if out.Values[i] == graphql.Null {
 				invalids++
@@ -5662,6 +6447,10 @@ func (ec *executionContext) _OverviewItem(ctx context.Context, sel ast.Selection
 
 			out.Values[i] = ec._OverviewItem_avatar(ctx, field, obj)
 
+		case "price":
+
+			out.Values[i] = ec._OverviewItem_price(ctx, field, obj)
+
 		default:
 			panic("unknown field " + strconv.Quote(field.Name))
 		}
@@ -5885,6 +6674,9 @@ func (ec *executionContext) _Query(ctx context.Context, sel ast.SelectionSet) gr
 					}
 				}()
 				res = ec._Query_items(ctx, field)
+				if res == graphql.Null {
+					atomic.AddUint32(&invalids, 1)
+				}
 				return res
 			}
 
@@ -5935,7 +6727,7 @@ func (ec *executionContext) _Query(ctx context.Context, sel ast.SelectionSet) gr
 			out.Concurrently(i, func() graphql.Marshaler {
 				return rrm(innerCtx)
 			})
-		case "listItem":
+		case "listDetailItem":
 			field := field
 
 			innerFunc := func(ctx context.Context) (res graphql.Marshaler) {
@@ -5944,7 +6736,7 @@ func (ec *executionContext) _Query(ctx context.Context, sel ast.SelectionSet) gr
 						ec.Error(ctx, ec.Recover(ctx, r))
 					}
 				}()
-				res = ec._Query_listItem(ctx, field)
+				res = ec._Query_listDetailItem(ctx, field)
 				if res == graphql.Null {
 					atomic.AddUint32(&invalids, 1)
 				}
@@ -6339,6 +7131,20 @@ func (ec *executionContext) marshalNInt2int(ctx context.Context, sel ast.Selecti
 	return res
 }
 
+func (ec *executionContext) marshalNListDetailItem2githubᚗcomᚋminhtuhcmusᚋnbhᚑmonoᚑbeᚋgraphᚋmodelᚐListDetailItem(ctx context.Context, sel ast.SelectionSet, v model.ListDetailItem) graphql.Marshaler {
+	return ec._ListDetailItem(ctx, sel, &v)
+}
+
+func (ec *executionContext) marshalNListDetailItem2ᚖgithubᚗcomᚋminhtuhcmusᚋnbhᚑmonoᚑbeᚋgraphᚋmodelᚐListDetailItem(ctx context.Context, sel ast.SelectionSet, v *model.ListDetailItem) graphql.Marshaler {
+	if v == nil {
+		if !graphql.HasFieldError(ctx, graphql.GetFieldContext(ctx)) {
+			ec.Errorf(ctx, "the requested element is null which the schema does not allow")
+		}
+		return graphql.Null
+	}
+	return ec._ListDetailItem(ctx, sel, v)
+}
+
 func (ec *executionContext) marshalNListItem2githubᚗcomᚋminhtuhcmusᚋnbhᚑmonoᚑbeᚋgraphᚋmodelᚐListItem(ctx context.Context, sel ast.SelectionSet, v model.ListItem) graphql.Marshaler {
 	return ec._ListItem(ctx, sel, &v)
 }
@@ -6478,8 +7284,8 @@ func (ec *executionContext) marshalNOverviewRole2ᚖgithubᚗcomᚋminhtuhcmus�
 	return ec._OverviewRole(ctx, sel, v)
 }
 
-func (ec *executionContext) unmarshalNPagination2githubᚗcomᚋminhtuhcmusᚋnbhᚑmonoᚑbeᚋgraphᚋmodelᚐPagination(ctx context.Context, v interface{}) (model.Pagination, error) {
-	res, err := ec.unmarshalInputPagination(ctx, v)
+func (ec *executionContext) unmarshalNPaginationFilter2githubᚗcomᚋminhtuhcmusᚋnbhᚑmonoᚑbeᚋgraphᚋmodelᚐPaginationFilter(ctx context.Context, v interface{}) (model.PaginationFilter, error) {
+	res, err := ec.unmarshalInputPaginationFilter(ctx, v)
 	return res, graphql.ErrorOnPath(ctx, err)
 }
 
@@ -6766,6 +7572,14 @@ func (ec *executionContext) marshalN__TypeKind2string(ctx context.Context, sel a
 	return res
 }
 
+func (ec *executionContext) unmarshalOAttributesFilter2ᚖgithubᚗcomᚋminhtuhcmusᚋnbhᚑmonoᚑbeᚋgraphᚋmodelᚐAttributesFilter(ctx context.Context, v interface{}) (*model.AttributesFilter, error) {
+	if v == nil {
+		return nil, nil
+	}
+	res, err := ec.unmarshalInputAttributesFilter(ctx, v)
+	return &res, graphql.ErrorOnPath(ctx, err)
+}
+
 func (ec *executionContext) unmarshalOBoolean2bool(ctx context.Context, v interface{}) (bool, error) {
 	res, err := graphql.UnmarshalBoolean(v)
 	return res, graphql.ErrorOnPath(ctx, err)
@@ -6893,12 +7707,11 @@ func (ec *executionContext) marshalOInt2ᚖint(ctx context.Context, sel ast.Sele
 	return res
 }
 
-func (ec *executionContext) unmarshalOItemFilter2ᚖgithubᚗcomᚋminhtuhcmusᚋnbhᚑmonoᚑbeᚋgraphᚋmodelᚐItemFilter(ctx context.Context, v interface{}) (*model.ItemFilter, error) {
+func (ec *executionContext) marshalOItemAttributes2ᚖgithubᚗcomᚋminhtuhcmusᚋnbhᚑmonoᚑbeᚋgraphᚋmodelᚐItemAttributes(ctx context.Context, sel ast.SelectionSet, v *model.ItemAttributes) graphql.Marshaler {
 	if v == nil {
-		return nil, nil
+		return graphql.Null
 	}
-	res, err := ec.unmarshalInputItemFilter(ctx, v)
-	return &res, graphql.ErrorOnPath(ctx, err)
+	return ec._ItemAttributes(ctx, sel, v)
 }
 
 func (ec *executionContext) marshalOOverviewCollection2ᚕᚖgithubᚗcomᚋminhtuhcmusᚋnbhᚑmonoᚑbeᚋgraphᚋmodelᚐOverviewCollectionᚄ(ctx context.Context, sel ast.SelectionSet, v []*model.OverviewCollection) graphql.Marshaler {
@@ -7094,6 +7907,13 @@ func (ec *executionContext) marshalOOverviewLabel2ᚕᚖgithubᚗcomᚋminhtuhcm
 	}
 
 	return ret
+}
+
+func (ec *executionContext) marshalOOverviewLabel2ᚖgithubᚗcomᚋminhtuhcmusᚋnbhᚑmonoᚑbeᚋgraphᚋmodelᚐOverviewLabel(ctx context.Context, sel ast.SelectionSet, v *model.OverviewLabel) graphql.Marshaler {
+	if v == nil {
+		return graphql.Null
+	}
+	return ec._OverviewLabel(ctx, sel, v)
 }
 
 func (ec *executionContext) unmarshalOString2ᚖstring(ctx context.Context, v interface{}) (*string, error) {

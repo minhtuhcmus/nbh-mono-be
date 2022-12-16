@@ -1,11 +1,11 @@
 input NewItem {
    id: Int
-   name: String!
-   searchKeys: String!
+   name: String
+   searchKeys: String
    description: String
    attributes: [Int!]
    images:[Int!]
-   type: Int!
+   type: Int
 }
 
 type DetailItem {
@@ -23,6 +23,7 @@ type OverviewItem {
    id: Int!
    name: String!
    avatar: OverviewImage
+   price: OverviewLabel
 }
 
 type NewCollection {
@@ -36,10 +37,26 @@ type OverviewCollection {
    totalItem: Int!
 }
 
-type ListItem {
+type ListDetailItem {
    data: [DetailItem!]
    page: Int!
    size: Int!
    total: Int!
    isEndPage: Boolean!
+}
+
+type ListItem{
+   data: [OverviewItem!]
+   page: Int!
+   size: Int!
+   total: Int!
+   isEndPage: Boolean!
+}
+
+type ItemAttributes {
+   colors: [OverviewLabel!]
+   origins: [OverviewLabel!]
+   sizes: [OverviewLabel!]
+   prices: [OverviewLabel!]
+   availability: [OverviewLabel!]
 }

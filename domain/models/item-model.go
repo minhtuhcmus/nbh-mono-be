@@ -43,3 +43,17 @@ type DetailItem struct {
 	Collection        *string `json:"collection"`
 	OrderInCollection int     `json:"orderInCollection"`
 }
+
+type OverviewItem struct {
+	ID     int     `json:"id"`
+	Name   string  `json:"name"`
+	Avatar *string `json:"avatar"`
+	Price  *string `json:"price"`
+}
+
+type ItemAttributeWithSubLabels struct {
+	ID     int    `json:"id"`
+	Code   string `json:"code"`
+	Value  string `json:"value"`
+	Labels string `json:"labels"`
+}

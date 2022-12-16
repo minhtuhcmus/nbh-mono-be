@@ -3,6 +3,7 @@ package repositories
 import (
 	"context"
 	"fmt"
+	sq "github.com/elgris/sqrl"
 	"github.com/minhtuhcmus/nbh-mono-be/database/datastore"
 	"github.com/minhtuhcmus/nbh-mono-be/domain/models"
 	"github.com/minhtuhcmus/nbh-mono-be/graph/model"
@@ -46,8 +47,11 @@ func (i *ItemRepository) SearchItemByKeyword(
 	err := datastore.
 		GetDB().
 		WithContext(ctx).
-		Raw("SELECT * FROM items WHERE MATCH (name, search_keys, description) "+
-			"AGAINST (? IN NATURAL LANGUAGE MODE)", keyword).
+		Raw("SELECT * "+
+			"FROM items "+
+			"WHERE MATCH (name, search_keys, description) "+
+			"AGAINST (? IN NATURAL LANGUAGE MODE) "+
+			"LITMIT ?, ?", keyword).
 		Order("items.`order`").
 		Scan(&items).Error
 	if err != nil {
@@ -59,35 +63,173 @@ func (i *ItemRepository) SearchItemByKeyword(
 
 func (i *ItemRepository) SearchItemByFilter(
 	ctx context.Context,
-	pagination *model.Pagination,
-	items *[]*models.Item,
+	filter *model.PaginationFilter,
+	listItem *[]*models.OverviewItem,
+	count *int,
 ) error {
-	var err error
-	if pagination.Filter != nil && pagination.Filter.Attributes != nil && len(pagination.Filter.Attributes) > 0 {
-		err = datastore.
-			GetDB().
-			WithContext(ctx).
-			Raw("SELECT i.* "+
+	//selectQuery := sq.Select("DISTINCT `items`.`id`, `items`.`name`, GROUP_CONCAT(JSON_OBJECT('id', images.id, 'link', images.link)) as avatar").From("`items`")
+	//countQuery := sq.Select("COUNT(DISTINCT `items`.`id`)").From("`items`")
+	//
+	//whereFilter := sq.And{}
+	//whereFilter = append(whereFilter, sq.Eq{"`items`.`active`": true})
+	//
+	//if filter.Collections != nil && len(filter.Collections) > 0 {
+	//	selectQuery = selectQuery.Join("`item_collections` ON `item_collections`.`fk_item` = `items`.`id`")
+	//	countQuery = countQuery.Join("`item_collections` ON `item_collections`.`fk_item` = `items`.`id`")
+	//	whereFilter = append(whereFilter, sq.And{
+	//		sq.Eq{"`item_collections`.`fk_collection`": filter.Collections},
+	//		sq.Eq{"`item_collections`.`active`": true},
+	//	})
+	//}
+	//
+	//if filter.Attributes != nil {
+	//	var subTables []sq.Sqlizer
+	//
+	//	values := reflect.ValueOf(*filter.Attributes)
+	//	for i := 0; i < values.NumField(); i++ {
+	//		if !values.Field(i).IsZero() {
+	//			subTables = append(subTables, sq.Expr("SELECT * FROM item_attributes WHERE fk_label IN ?", values.Field(i)))
+	//		}
+	//	}
+	//
+	//	selectQuery = selectQuery.Join("`item_attributes` ON `item_attributes`.`fk_item` = `items`.`id`")
+	//	countQuery = countQuery.Join("`item_attributes` ON `item_attributes`.`fk_item` = `items`.`id`")
+	//
+	//	attrQuery := sq.And{}
+	//	if filter.Attributes.Origins != nil && len(filter.Attributes.Origins) > 0 {
+	//		attrQuery = append(attrQuery, sq.Eq{"`item_attributes`.`fk_label`": filter.Attributes.Origins})
+	//	}
+	//	if filter.Attributes.Colors != nil && len(filter.Attributes.Colors) > 0 {
+	//		attrQuery = append(attrQuery, sq.Eq{"`item_attributes`.`fk_label`": filter.Attributes.Colors})
+	//	}
+	//	if filter.Attributes.Sizes != nil && len(filter.Attributes.Sizes) > 0 {
+	//		attrQuery = append(attrQuery, sq.Eq{"`item_attributes`.`fk_label`": filter.Attributes.Sizes})
+	//	}
+	//	if filter.Attributes.Availability != nil && len(filter.Attributes.Availability) > 0 {
+	//		attrQuery = append(attrQuery, sq.Eq{"`item_attributes`.`fk_label`": filter.Attributes.Availability})
+	//	}
+	//	if filter.Attributes.Prices != nil && len(filter.Attributes.Prices) > 0 {
+	//		attrQuery = append(attrQuery, sq.Eq{"`item_attributes`.`fk_label`": filter.Attributes.Prices})
+	//	}
+	//
+	//	whereFilter = append(whereFilter, sq.And{
+	//		attrQuery,
+	//		sq.Eq{"`item_attributes`.`active`": true},
+	//	})
+	//}
+	//
+	//if filter.Keyword != nil {
+	//	whereFilter = append(whereFilter, sq.Expr("MATCH (name, search_keys, description) "+
+	//		"AGAINST (? IN NATURAL LANGUAGE MODE)", filter.Keyword))
+	//}
+	//
+	//countQuery = countQuery.Where(whereFilter)
+	//countQueryRaw, countQueryParams, err := countQuery.ToSql()
+	//if err != nil {
+	//	return err
+	//}
+	//
+	//err = datastore.GetDB().WithContext(ctx).
+	//	Raw(countQueryRaw, countQueryParams...).Scan(count).Error
+	//if err != nil {
+	//	return err
+	//}
+	//
+	//if *count == 0 {
+	//	listItem = nil
+	//	return nil
+	//}
+	//
+	//if filter.Page*filter.Size >= *count {
+	//	filter.Page = *count / filter.Page
+	//}
+	//
+	//selectQuery = selectQuery.
+	//	LeftJoin("`item_images` ON `item_images`.`fk_item` = `items`.`id`").
+	//	LeftJoin("`images` ON `images`.`id` = `item_images`.`fk_image` AND `item_images`.`is_avatar` = ?", true).
+	//	Where(whereFilter).
+	//	GroupBy("`items`.`id`, `items`.`name`").
+	//	Offset(uint64(filter.Page * filter.Size)).
+	//	Limit(uint64(filter.Size))
+	//
+	//selectQueryRaw, selectQueryParams, err := selectQuery.ToSql()
+	//if err != nil {
+	//	return err
+	//}
+	//
+	//err = datastore.GetDB().WithContext(ctx).
+	//	Raw(selectQueryRaw, selectQueryParams...).Scan(&listItem).Error
+	//if err != nil {
+	//	return err
+	//}
+	//
+	//return nil
+
+	//selectQuery := sq.Select("DISTINCT `items`.`id`, `items`.`name`, GROUP_CONCAT(JSON_OBJECT('id', images.id, 'link', images.link)) as avatar").From("`items`")
+	//countQuery := sq.Select("COUNT(DISTINCT `ud`.`id`)").From("`items`")
+
+	var fromBases []sq.Sqlizer
+
+	if filter.Attributes.Origins != nil && len(filter.Attributes.Origins) > 0 {
+		fromBases = append(
+			fromBases,
+			sq.Expr("SELECT i.id "+
 				"FROM items i "+
-				"INNER JOIN item_attribute ia ON i.id = ia.fk_item "+
-				"WHERE i.active = ? AND ia.fk_label IN ? LIMIT ?, ?", true, pagination.Filter.Attributes, pagination.Page*pagination.Size, pagination.Size).
-			Order("i.`order`").
-			Scan(&items).Error
-	} else {
-		err = datastore.
-			GetDB().
-			WithContext(ctx).
-			Raw("SELECT i.* "+
+				"LEFT JOIN item_attributes ia ON i.id = ia.fk_item "+
+				"WHERE fk_label IN ?",
+				filter.Attributes.Origins))
+	}
+	if filter.Attributes.Colors != nil && len(filter.Attributes.Colors) > 0 {
+		fromBases = append(
+			fromBases,
+			sq.Expr("SELECT i.id "+
 				"FROM items i "+
-				"WHERE i.active = ? "+
-				"LIMIT ?, ?", true, pagination.Page*pagination.Size, pagination.Size).
-			Order("i.`order`").
-			Scan(&items).Error
+				"LEFT JOIN item_attributes ia ON i.id = ia.fk_item "+
+				"WHERE fk_label IN ?",
+				filter.Attributes.Colors))
+	}
+	if filter.Attributes.Sizes != nil && len(filter.Attributes.Sizes) > 0 {
+		fromBases = append(
+			fromBases,
+			sq.Expr("SELECT i.id "+
+				"FROM items i "+
+				"LEFT JOIN item_attributes ia ON i.id = ia.fk_item "+
+				"WHERE fk_label IN ?",
+				filter.Attributes.Sizes))
+	}
+	if filter.Attributes.Availability != nil && len(filter.Attributes.Availability) > 0 {
+		fromBases = append(
+			fromBases,
+			sq.Expr("SELECT i.id "+
+				"FROM items i "+
+				"LEFT JOIN item_attributes ia ON i.id = ia.fk_item "+
+				"WHERE fk_label IN ?",
+				filter.Attributes.Availability))
+	}
+	if filter.Attributes.Prices != nil && len(filter.Attributes.Prices) > 0 {
+		fromBases = append(
+			fromBases,
+			sq.Expr("SELECT i.id "+
+				"FROM items i "+
+				"LEFT JOIN item_attributes ia ON i.id = ia.fk_item "+
+				"WHERE fk_label IN ?",
+				filter.Attributes.Prices))
 	}
 
-	if err != nil {
-		items = nil
-		return fmt.Errorf("error ItemRepository.SearchItemByKeyword %v", err)
+	var fromBaseQueries []string
+	var fromBaseParams []interface{}
+
+	var err error
+	for idx, fromBase := range fromBases {
+		fromBaseQueries[idx], fromBaseParams[idx], err = fromBase.ToSql()
+		if err != nil {
+			return err
+		}
+	}
+
+	//baseQuery := ""
+	for i := 0; i < len(fromBaseQueries); i++ {
+
 	}
 	return nil
 }
@@ -126,9 +268,9 @@ func (i *ItemRepository) CreateItem(
 	return nil
 }
 
-func (i *ItemRepository) GetListItem(
+func (i *ItemRepository) GetListDetailItem(
 	ctx context.Context,
-	pagination *model.Pagination,
+	pagination *model.PaginationFilter,
 	count *int,
 	listItem *[]*models.DetailItem,
 ) error {
@@ -162,9 +304,9 @@ func (i *ItemRepository) GetListItem(
 		listItemQuery = listItemQuery.Where("ic.fk_collection IN ?", pagination.Collections)
 		countItemQuery = countItemQuery.Where("ic.fk_collection IN ?", pagination.Collections)
 	}
-	if pagination.Filter != nil && pagination.Filter.Attributes != nil && len(pagination.Filter.Attributes) > 0 {
-		listItemQuery = listItemQuery.Where("ia.fk_label IN ?", pagination.Filter.Attributes)
-		countItemQuery = countItemQuery.Where("ia.fk_label IN ?", pagination.Filter.Attributes)
+	if pagination.Attributes != nil {
+		listItemQuery = listItemQuery.Where("ia.fk_label IN ?", pagination.Attributes)
+		countItemQuery = countItemQuery.Where("ia.fk_label IN ?", pagination.Attributes)
 	}
 
 	err := countItemQuery.Scan(count).Error

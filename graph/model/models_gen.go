@@ -6,6 +6,14 @@ import (
 	"time"
 )
 
+type AttributesFilter struct {
+	Colors       []int `json:"colors"`
+	Origins      []int `json:"origins"`
+	Sizes        []int `json:"sizes"`
+	Availability []int `json:"availability"`
+	Prices       []int `json:"prices"`
+}
+
 type DetailItem struct {
 	ID                int                 `json:"id"`
 	Name              string              `json:"name"`
@@ -17,16 +25,28 @@ type DetailItem struct {
 	OrderInCollection int                 `json:"orderInCollection"`
 }
 
-type ItemFilter struct {
-	Attributes []int `json:"attributes"`
+type ItemAttributes struct {
+	Colors       []*OverviewLabel `json:"colors"`
+	Origins      []*OverviewLabel `json:"origins"`
+	Sizes        []*OverviewLabel `json:"sizes"`
+	Prices       []*OverviewLabel `json:"prices"`
+	Availability []*OverviewLabel `json:"availability"`
 }
 
-type ListItem struct {
+type ListDetailItem struct {
 	Data      []*DetailItem `json:"data"`
 	Page      int           `json:"page"`
 	Size      int           `json:"size"`
 	Total     int           `json:"total"`
 	IsEndPage bool          `json:"isEndPage"`
+}
+
+type ListItem struct {
+	Data      []*OverviewItem `json:"data"`
+	Page      int             `json:"page"`
+	Size      int             `json:"size"`
+	Total     int             `json:"total"`
+	IsEndPage bool            `json:"isEndPage"`
 }
 
 type NewCollection struct {
@@ -39,12 +59,12 @@ type NewImage struct {
 
 type NewItem struct {
 	ID          *int    `json:"id"`
-	Name        string  `json:"name"`
-	SearchKeys  string  `json:"searchKeys"`
+	Name        *string `json:"name"`
+	SearchKeys  *string `json:"searchKeys"`
 	Description *string `json:"description"`
 	Attributes  []int   `json:"attributes"`
 	Images      []int   `json:"images"`
-	Type        int     `json:"type"`
+	Type        *int    `json:"type"`
 }
 
 type NewLabel struct {
@@ -88,6 +108,7 @@ type OverviewItem struct {
 	ID     int            `json:"id"`
 	Name   string         `json:"name"`
 	Avatar *OverviewImage `json:"avatar"`
+	Price  *OverviewLabel `json:"price"`
 }
 
 type OverviewLabel struct {
@@ -117,10 +138,10 @@ type OverviewUser struct {
 	UpdatedAt   time.Time      `json:"updatedAt"`
 }
 
-type Pagination struct {
-	Collections []int       `json:"collections"`
-	Page        int         `json:"page"`
-	Size        int         `json:"size"`
-	Keyword     *string     `json:"keyword"`
-	Filter      *ItemFilter `json:"filter"`
+type PaginationFilter struct {
+	Collections []int             `json:"collections"`
+	Page        int               `json:"page"`
+	Size        int               `json:"size"`
+	Keyword     *string           `json:"keyword"`
+	Attributes  *AttributesFilter `json:"attributes"`
 }

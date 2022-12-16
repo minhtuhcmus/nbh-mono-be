@@ -1,11 +1,15 @@
-input ItemFilter {
-    attributes: [Int!]
-}
-
-input Pagination {
+input PaginationFilter {
     collections: [Int!]
     page: Int!
     size: Int!
     keyword: String
-    filter: ItemFilter
+    attributes: AttributesFilter
+}
+
+input AttributesFilter {
+    colors: [Int!]
+    origins: [Int!]
+    sizes: [Int!]
+    availability: [Int!]
+    prices: [Int!]
 }
