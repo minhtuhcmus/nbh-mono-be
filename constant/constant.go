@@ -11,6 +11,14 @@ const (
 	ITEM_AVAILABILITY_CODE        = "ITEM_AVAILABILITY"
 	ITEM_PRICE_CODE               = "ITEM_PRICE"
 )
+
+const (
+	ITEM_ORIGIN       string = "item-origin"
+	ITEM_COLOR               = "item-color"
+	ITEM_SIZE                = "item-size"
+	ITEM_PRICE               = "item-price"
+	ITEM_AVAILABILITY        = "item-availability"
+)
 const (
 	ADMIN    string = "admin"
 	CUSTOMER        = "customer"

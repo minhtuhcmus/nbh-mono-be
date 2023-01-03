@@ -6,6 +6,14 @@ import (
 	"time"
 )
 
+type AttributeFilter struct {
+	Colors       []int `json:"colors"`
+	Origins      []int `json:"origins"`
+	Sizes        []int `json:"sizes"`
+	Prices       []int `json:"prices"`
+	Availability []int `json:"availability"`
+}
+
 type AttributesFilter struct {
 	Colors       []int `json:"colors"`
 	Origins      []int `json:"origins"`
@@ -42,11 +50,12 @@ type ListDetailItem struct {
 }
 
 type ListItem struct {
-	Data      []*OverviewItem `json:"data"`
-	Page      int             `json:"page"`
-	Size      int             `json:"size"`
-	Total     int             `json:"total"`
-	IsEndPage bool            `json:"isEndPage"`
+	Data      []*OverviewItem  `json:"data"`
+	Filter    *AttributeFilter `json:"filter"`
+	Page      int              `json:"page"`
+	Size      int              `json:"size"`
+	Total     int              `json:"total"`
+	IsEndPage bool             `json:"isEndPage"`
 }
 
 type NewCollection struct {
@@ -93,10 +102,10 @@ type NewUser struct {
 }
 
 type OverviewCollection struct {
-	ID        int    `json:"id"`
-	Name      string `json:"name"`
-	Order     int    `json:"order"`
-	TotalItem int    `json:"totalItem"`
+	ID    int    `json:"id"`
+	Name  string `json:"name"`
+	Order int    `json:"order"`
+	Total int    `json:"total"`
 }
 
 type OverviewImage struct {

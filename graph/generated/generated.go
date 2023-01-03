@@ -45,6 +45,14 @@ type DirectiveRoot struct {
 }
 
 type ComplexityRoot struct {
+	AttributeFilter struct {
+		Availability func(childComplexity int) int
+		Colors       func(childComplexity int) int
+		Origins      func(childComplexity int) int
+		Prices       func(childComplexity int) int
+		Sizes        func(childComplexity int) int
+	}
+
 	DetailItem struct {
 		Attributes        func(childComplexity int) int
 		Collection        func(childComplexity int) int
@@ -74,6 +82,7 @@ type ComplexityRoot struct {
 
 	ListItem struct {
 		Data      func(childComplexity int) int
+		Filter    func(childComplexity int) int
 		IsEndPage func(childComplexity int) int
 		Page      func(childComplexity int) int
 		Size      func(childComplexity int) int
@@ -90,10 +99,10 @@ type ComplexityRoot struct {
 	}
 
 	OverviewCollection struct {
-		ID        func(childComplexity int) int
-		Name      func(childComplexity int) int
-		Order     func(childComplexity int) int
-		TotalItem func(childComplexity int) int
+		ID    func(childComplexity int) int
+		Name  func(childComplexity int) int
+		Order func(childComplexity int) int
+		Total func(childComplexity int) int
 	}
 
 	OverviewImage struct {
@@ -168,6 +177,41 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 	ec := executionContext{nil, e}
 	_ = ec
 	switch typeName + "." + field {
+
+	case "AttributeFilter.availability":
+		if e.complexity.AttributeFilter.Availability == nil {
+			break
+		}
+
+		return e.complexity.AttributeFilter.Availability(childComplexity), true
+
+	case "AttributeFilter.colors":
+		if e.complexity.AttributeFilter.Colors == nil {
+			break
+		}
+
+		return e.complexity.AttributeFilter.Colors(childComplexity), true
+
+	case "AttributeFilter.origins":
+		if e.complexity.AttributeFilter.Origins == nil {
+			break
+		}
+
+		return e.complexity.AttributeFilter.Origins(childComplexity), true
+
+	case "AttributeFilter.prices":
+		if e.complexity.AttributeFilter.Prices == nil {
+			break
+		}
+
+		return e.complexity.AttributeFilter.Prices(childComplexity), true
+
+	case "AttributeFilter.sizes":
+		if e.complexity.AttributeFilter.Sizes == nil {
+			break
+		}
+
+		return e.complexity.AttributeFilter.Sizes(childComplexity), true
 
 	case "DetailItem.attributes":
 		if e.complexity.DetailItem.Attributes == nil {
@@ -302,6 +346,13 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 
 		return e.complexity.ListItem.Data(childComplexity), true
 
+	case "ListItem.filter":
+		if e.complexity.ListItem.Filter == nil {
+			break
+		}
+
+		return e.complexity.ListItem.Filter(childComplexity), true
+
 	case "ListItem.isEndPage":
 		if e.complexity.ListItem.IsEndPage == nil {
 			break
@@ -382,12 +433,12 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 
 		return e.complexity.OverviewCollection.Order(childComplexity), true
 
-	case "OverviewCollection.totalItem":
-		if e.complexity.OverviewCollection.TotalItem == nil {
+	case "OverviewCollection.total":
+		if e.complexity.OverviewCollection.Total == nil {
 			break
 		}
 
-		return e.complexity.OverviewCollection.TotalItem(childComplexity), true
+		return e.complexity.OverviewCollection.Total(childComplexity), true
 
 	case "OverviewImage.id":
 		if e.complexity.OverviewImage.ID == nil {
@@ -729,7 +780,7 @@ type OverviewCollection {
    id: Int!
    name: String!
    order: Int!
-   totalItem: Int!
+   total: Int!
 }
 
 type ListDetailItem {
@@ -740,8 +791,17 @@ type ListDetailItem {
    isEndPage: Boolean!
 }
 
+type AttributeFilter{
+   colors: [Int!]
+   origins: [Int!]
+   sizes: [Int!]
+   prices: [Int!]
+   availability: [Int!]
+}
+
 type ListItem{
    data: [OverviewItem!]
+   filter: AttributeFilter!
    page: Int!
    size: Int!
    total: Int!
@@ -953,6 +1013,211 @@ func (ec *executionContext) field___Type_fields_args(ctx context.Context, rawArg
 // endregion ************************** directives.gotpl **************************
 
 // region    **************************** field.gotpl *****************************
+
+func (ec *executionContext) _AttributeFilter_colors(ctx context.Context, field graphql.CollectedField, obj *model.AttributeFilter) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_AttributeFilter_colors(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.Colors, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		return graphql.Null
+	}
+	res := resTmp.([]int)
+	fc.Result = res
+	return ec.marshalOInt2ᚕintᚄ(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_AttributeFilter_colors(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "AttributeFilter",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type Int does not have child fields")
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _AttributeFilter_origins(ctx context.Context, field graphql.CollectedField, obj *model.AttributeFilter) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_AttributeFilter_origins(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.Origins, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		return graphql.Null
+	}
+	res := resTmp.([]int)
+	fc.Result = res
+	return ec.marshalOInt2ᚕintᚄ(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_AttributeFilter_origins(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "AttributeFilter",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type Int does not have child fields")
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _AttributeFilter_sizes(ctx context.Context, field graphql.CollectedField, obj *model.AttributeFilter) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_AttributeFilter_sizes(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.Sizes, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		return graphql.Null
+	}
+	res := resTmp.([]int)
+	fc.Result = res
+	return ec.marshalOInt2ᚕintᚄ(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_AttributeFilter_sizes(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "AttributeFilter",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type Int does not have child fields")
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _AttributeFilter_prices(ctx context.Context, field graphql.CollectedField, obj *model.AttributeFilter) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_AttributeFilter_prices(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.Prices, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		return graphql.Null
+	}
+	res := resTmp.([]int)
+	fc.Result = res
+	return ec.marshalOInt2ᚕintᚄ(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_AttributeFilter_prices(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "AttributeFilter",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type Int does not have child fields")
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _AttributeFilter_availability(ctx context.Context, field graphql.CollectedField, obj *model.AttributeFilter) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_AttributeFilter_availability(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.Availability, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		return graphql.Null
+	}
+	res := resTmp.([]int)
+	fc.Result = res
+	return ec.marshalOInt2ᚕintᚄ(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_AttributeFilter_availability(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "AttributeFilter",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type Int does not have child fields")
+		},
+	}
+	return fc, nil
+}
 
 func (ec *executionContext) _DetailItem_id(ctx context.Context, field graphql.CollectedField, obj *model.DetailItem) (ret graphql.Marshaler) {
 	fc, err := ec.fieldContext_DetailItem_id(ctx, field)
@@ -1270,8 +1535,8 @@ func (ec *executionContext) fieldContext_DetailItem_collection(ctx context.Conte
 				return ec.fieldContext_OverviewCollection_name(ctx, field)
 			case "order":
 				return ec.fieldContext_OverviewCollection_order(ctx, field)
-			case "totalItem":
-				return ec.fieldContext_OverviewCollection_totalItem(ctx, field)
+			case "total":
+				return ec.fieldContext_OverviewCollection_total(ctx, field)
 			}
 			return nil, fmt.Errorf("no field named %q was found under type OverviewCollection", field.Name)
 		},
@@ -1864,6 +2129,62 @@ func (ec *executionContext) fieldContext_ListItem_data(ctx context.Context, fiel
 	return fc, nil
 }
 
+func (ec *executionContext) _ListItem_filter(ctx context.Context, field graphql.CollectedField, obj *model.ListItem) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_ListItem_filter(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.Filter, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.(*model.AttributeFilter)
+	fc.Result = res
+	return ec.marshalNAttributeFilter2ᚖgithubᚗcomᚋminhtuhcmusᚋnbhᚑmonoᚑbeᚋgraphᚋmodelᚐAttributeFilter(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_ListItem_filter(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "ListItem",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			switch field.Name {
+			case "colors":
+				return ec.fieldContext_AttributeFilter_colors(ctx, field)
+			case "origins":
+				return ec.fieldContext_AttributeFilter_origins(ctx, field)
+			case "sizes":
+				return ec.fieldContext_AttributeFilter_sizes(ctx, field)
+			case "prices":
+				return ec.fieldContext_AttributeFilter_prices(ctx, field)
+			case "availability":
+				return ec.fieldContext_AttributeFilter_availability(ctx, field)
+			}
+			return nil, fmt.Errorf("no field named %q was found under type AttributeFilter", field.Name)
+		},
+	}
+	return fc, nil
+}
+
 func (ec *executionContext) _ListItem_page(ctx context.Context, field graphql.CollectedField, obj *model.ListItem) (ret graphql.Marshaler) {
 	fc, err := ec.fieldContext_ListItem_page(ctx, field)
 	if err != nil {
@@ -2342,8 +2663,8 @@ func (ec *executionContext) fieldContext_OverviewCollection_order(ctx context.Co
 	return fc, nil
 }
 
-func (ec *executionContext) _OverviewCollection_totalItem(ctx context.Context, field graphql.CollectedField, obj *model.OverviewCollection) (ret graphql.Marshaler) {
-	fc, err := ec.fieldContext_OverviewCollection_totalItem(ctx, field)
+func (ec *executionContext) _OverviewCollection_total(ctx context.Context, field graphql.CollectedField, obj *model.OverviewCollection) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_OverviewCollection_total(ctx, field)
 	if err != nil {
 		return graphql.Null
 	}
@@ -2356,7 +2677,7 @@ func (ec *executionContext) _OverviewCollection_totalItem(ctx context.Context, f
 	}()
 	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
 		ctx = rctx // use context from middleware stack in children
-		return obj.TotalItem, nil
+		return obj.Total, nil
 	})
 	if err != nil {
 		ec.Error(ctx, err)
@@ -2373,7 +2694,7 @@ func (ec *executionContext) _OverviewCollection_totalItem(ctx context.Context, f
 	return ec.marshalNInt2int(ctx, field.Selections, res)
 }
 
-func (ec *executionContext) fieldContext_OverviewCollection_totalItem(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+func (ec *executionContext) fieldContext_OverviewCollection_total(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
 	fc = &graphql.FieldContext{
 		Object:     "OverviewCollection",
 		Field:      field,
@@ -3525,6 +3846,8 @@ func (ec *executionContext) fieldContext_Query_items(ctx context.Context, field 
 			switch field.Name {
 			case "data":
 				return ec.fieldContext_ListItem_data(ctx, field)
+			case "filter":
+				return ec.fieldContext_ListItem_filter(ctx, field)
 			case "page":
 				return ec.fieldContext_ListItem_page(ctx, field)
 			case "size":
@@ -3646,8 +3969,8 @@ func (ec *executionContext) fieldContext_Query_collections(ctx context.Context, 
 				return ec.fieldContext_OverviewCollection_name(ctx, field)
 			case "order":
 				return ec.fieldContext_OverviewCollection_order(ctx, field)
-			case "totalItem":
-				return ec.fieldContext_OverviewCollection_totalItem(ctx, field)
+			case "total":
+				return ec.fieldContext_OverviewCollection_total(ctx, field)
 			}
 			return nil, fmt.Errorf("no field named %q was found under type OverviewCollection", field.Name)
 		},
@@ -6044,6 +6367,47 @@ func (ec *executionContext) unmarshalInputPaginationFilter(ctx context.Context, 
 
 // region    **************************** object.gotpl ****************************
 
+var attributeFilterImplementors = []string{"AttributeFilter"}
+
+func (ec *executionContext) _AttributeFilter(ctx context.Context, sel ast.SelectionSet, obj *model.AttributeFilter) graphql.Marshaler {
+	fields := graphql.CollectFields(ec.OperationContext, sel, attributeFilterImplementors)
+	out := graphql.NewFieldSet(fields)
+	var invalids uint32
+	for i, field := range fields {
+		switch field.Name {
+		case "__typename":
+			out.Values[i] = graphql.MarshalString("AttributeFilter")
+		case "colors":
+
+			out.Values[i] = ec._AttributeFilter_colors(ctx, field, obj)
+
+		case "origins":
+
+			out.Values[i] = ec._AttributeFilter_origins(ctx, field, obj)
+
+		case "sizes":
+
+			out.Values[i] = ec._AttributeFilter_sizes(ctx, field, obj)
+
+		case "prices":
+
+			out.Values[i] = ec._AttributeFilter_prices(ctx, field, obj)
+
+		case "availability":
+
+			out.Values[i] = ec._AttributeFilter_availability(ctx, field, obj)
+
+		default:
+			panic("unknown field " + strconv.Quote(field.Name))
+		}
+	}
+	out.Dispatch()
+	if invalids > 0 {
+		return graphql.Null
+	}
+	return out
+}
+
 var detailItemImplementors = []string{"DetailItem"}
 
 func (ec *executionContext) _DetailItem(ctx context.Context, sel ast.SelectionSet, obj *model.DetailItem) graphql.Marshaler {
@@ -6220,6 +6584,13 @@ func (ec *executionContext) _ListItem(ctx context.Context, sel ast.SelectionSet,
 
 			out.Values[i] = ec._ListItem_data(ctx, field, obj)
 
+		case "filter":
+
+			out.Values[i] = ec._ListItem_filter(ctx, field, obj)
+
+			if out.Values[i] == graphql.Null {
+				invalids++
+			}
 		case "page":
 
 			out.Values[i] = ec._ListItem_page(ctx, field, obj)
@@ -6366,9 +6737,9 @@ func (ec *executionContext) _OverviewCollection(ctx context.Context, sel ast.Sel
 			if out.Values[i] == graphql.Null {
 				invalids++
 			}
-		case "totalItem":
+		case "total":
 
-			out.Values[i] = ec._OverviewCollection_totalItem(ctx, field, obj)
+			out.Values[i] = ec._OverviewCollection_total(ctx, field, obj)
 
 			if out.Values[i] == graphql.Null {
 				invalids++
@@ -7090,6 +7461,16 @@ func (ec *executionContext) ___Type(ctx context.Context, sel ast.SelectionSet, o
 // endregion **************************** object.gotpl ****************************
 
 // region    ***************************** type.gotpl *****************************
+
+func (ec *executionContext) marshalNAttributeFilter2ᚖgithubᚗcomᚋminhtuhcmusᚋnbhᚑmonoᚑbeᚋgraphᚋmodelᚐAttributeFilter(ctx context.Context, sel ast.SelectionSet, v *model.AttributeFilter) graphql.Marshaler {
+	if v == nil {
+		if !graphql.HasFieldError(ctx, graphql.GetFieldContext(ctx)) {
+			ec.Errorf(ctx, "the requested element is null which the schema does not allow")
+		}
+		return graphql.Null
+	}
+	return ec._AttributeFilter(ctx, sel, v)
+}
 
 func (ec *executionContext) unmarshalNBoolean2bool(ctx context.Context, v interface{}) (bool, error) {
 	res, err := graphql.UnmarshalBoolean(v)

@@ -34,7 +34,7 @@ type OverviewCollection {
    id: Int!
    name: String!
    order: Int!
-   totalItem: Int!
+   total: Int!
 }
 
 type ListDetailItem {
@@ -45,8 +45,17 @@ type ListDetailItem {
    isEndPage: Boolean!
 }
 
+type AttributeFilter{
+   colors: [Int!]
+   origins: [Int!]
+   sizes: [Int!]
+   prices: [Int!]
+   availability: [Int!]
+}
+
 type ListItem{
    data: [OverviewItem!]
+   filter: AttributeFilter!
    page: Int!
    size: Int!
    total: Int!

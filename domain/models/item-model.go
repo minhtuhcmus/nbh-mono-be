@@ -57,3 +57,11 @@ type ItemAttributeWithSubLabels struct {
 	Value  string `json:"value"`
 	Labels string `json:"labels"`
 }
+
+type AttributeFilter struct {
+	Colors       string `json:"colors"`
+	Origins      string `json:"origins"`
+	Sizes        string `json:"sizes"`
+	Availability string `json:"availability"`
+	Prices       string `json:"prices"`
+}

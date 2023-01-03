@@ -70,3 +70,17 @@ func (l *LabelRepository) FetchAllItemAttributes(
 	}
 	return nil
 }
+
+func (l *LabelRepository) FetchAllItemAttributeIDsByCode(
+	ctx context.Context,
+	code string,
+	labelIDs *[]int,
+) error {
+	err := datastore.GetDB().WithContext(ctx).
+		Raw("SELECT labels.id FROM labels WHERE code = ? AND active = ?", code, true).
+		Scan(labelIDs).Error
+	if err != nil {
+		return err
+	}
+	return nil
+}

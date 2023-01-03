@@ -9,12 +9,13 @@ CREATE TABLE `collections`(
 DROP TABLE IF EXISTS `items`;
 CREATE TABLE `items` (
   id INT AUTO_INCREMENT PRIMARY KEY,
-  name VARCHAR(20) NOT NULL UNIQUE,
+  name VARCHAR(80) NOT NULL UNIQUE,
   search_keys TEXT,
   description TEXT,
-  fk_origin INT,
+  fk_label_origin INT,
   fk_collection INT,
-  fk_color INT,
+  fk_label_color INT,
+  fk_image_avatar INT,
   `order_in_collection` INT,
   `order` INT,
   active BOOLEAN NOT NULL DEFAULT TRUE,

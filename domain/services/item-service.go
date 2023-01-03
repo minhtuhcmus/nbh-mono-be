@@ -194,29 +194,92 @@ func (i itemService) GetItems(ctx context.Context, filter *model.PaginationFilte
 		Size:      filter.Size,
 		Total:     0,
 		IsEndPage: false,
-	} //if filter.Keyword != nil {
-	//	err = i.itemRepository.SearchItemByKeyword(ctx, *filter.Keyword, &items)
-	//} else {
-	//	if filter.Collections != nil && len(filter.Collections) > 0 {
-	//		err = i.collectionRepository.GetItemsInCollections(ctx, filter, &items)
-	//	} else {
-	//		err = i.itemRepository.SearchItemByFilter(ctx, filter, &items)
-	//	}
-	//}
+	}
+
+	if filter.Attributes == nil {
+		filter.Attributes = &model.AttributesFilter{
+			Colors:       nil,
+			Origins:      nil,
+			Sizes:        nil,
+			Availability: nil,
+			Prices:       nil,
+		}
+	}
+
+	if filter.Collections == nil {
+		var collections []int
+		err := i.collectionRepository.GetAllCollectionIDs(ctx, &collections)
+		if err != nil {
+			return nil, err
+		}
+		filter.Collections = collections
+	}
+
+	if filter.Attributes.Sizes == nil {
+		var sizes []int
+		err := i.labelRepository.FetchAllItemAttributeIDsByCode(ctx, constant.ITEM_SIZE, &sizes)
+		if err != nil {
+			return nil, err
+		}
+		filter.Attributes.Sizes = sizes
+	}
+
+	if filter.Attributes.Prices == nil {
+		var prices []int
+		err := i.labelRepository.FetchAllItemAttributeIDsByCode(ctx, constant.ITEM_PRICE, &prices)
+		if err != nil {
+			return nil, err
+		}
+		filter.Attributes.Prices = prices
+	}
+
+	if filter.Attributes.Colors == nil {
+		var colors []int
+		err := i.labelRepository.FetchAllItemAttributeIDsByCode(ctx, constant.ITEM_COLOR, &colors)
+		if err != nil {
+			return nil, err
+		}
+		filter.Attributes.Colors = colors
+	}
+
+	if filter.Attributes.Origins == nil {
+		var origins []int
+		err := i.labelRepository.FetchAllItemAttributeIDsByCode(ctx, constant.ITEM_ORIGIN, &origins)
+		if err != nil {
+			return nil, err
+		}
+		filter.Attributes.Origins = origins
+	}
+
+	if filter.Attributes.Availability == nil {
+		var availability []int
+		err := i.labelRepository.FetchAllItemAttributeIDsByCode(ctx, constant.ITEM_AVAILABILITY, &availability)
+		if err != nil {
+			return nil, err
+		}
+		filter.Attributes.Availability = availability
+	}
+
 	var overviewItems []*models.OverviewItem
 	err := i.itemRepository.SearchItemByFilter(ctx, filter, &overviewItems, &listItem.Total)
 	if err != nil {
 		return nil, fmt.Errorf("error itemService.GetItems %v", err)
 	}
 
+	listItem.Filter = &model.AttributeFilter{}
+
 	if listItem.Total == 0 {
+		listItem.Data = []*model.OverviewItem{}
 		listItem.IsEndPage = true
 		listItem.Page = 0
 		listItem.Size = 0
 		return listItem, nil
 	}
 
+	//var itemIds []int
+	//
 	for _, it := range overviewItems {
+		//itemIds = append(itemIds, it.ID)
 		var imageRaw model.OverviewImage
 		if it.Avatar != nil {
 			err = json.Unmarshal([]byte(*it.Avatar), &imageRaw)
@@ -231,6 +294,34 @@ func (i itemService) GetItems(ctx context.Context, filter *model.PaginationFilte
 			Price:  nil,
 		})
 	}
+
+	//attributeFilterRaw := models.AttributeFilter{}
+	//err = i.itemRepository.GetItemAttributeFilter(ctx, itemIds, &attributeFilterRaw)
+	//if err != nil {
+	//	return nil, err
+	//}
+
+	//err = json.Unmarshal([]byte("["+attributeFilterRaw.Colors+"]"), &attributeFilter.Colors)
+	//if err != nil {
+	//	return nil, err
+	//}
+	//
+	//err = json.Unmarshal([]byte("["+attributeFilterRaw.Origins+"]"), &attributeFilter.Origins)
+	//if err != nil {
+	//	return nil, err
+	//}
+	//
+	//err = json.Unmarshal([]byte("["+attributeFilterRaw.Sizes+"]"), &attributeFilter.Sizes)
+	//if err != nil {
+	//	return nil, err
+	//}
+	//
+	//err = json.Unmarshal([]byte("["+attributeFilterRaw.Availability+"]"), &attributeFilter.Availability)
+	//if err != nil {
+	//	return nil, err
+	//}
+	//
+	//listItem.Filter = &attributeFilter
 
 	return listItem, nil
 }

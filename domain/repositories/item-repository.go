@@ -168,68 +168,120 @@ func (i *ItemRepository) SearchItemByFilter(
 	//selectQuery := sq.Select("DISTINCT `items`.`id`, `items`.`name`, GROUP_CONCAT(JSON_OBJECT('id', images.id, 'link', images.link)) as avatar").From("`items`")
 	//countQuery := sq.Select("COUNT(DISTINCT `ud`.`id`)").From("`items`")
 
-	var fromBases []sq.Sqlizer
+	//if filter.Attributes.Origins != nil && len(filter.Attributes.Origins) > 0 {
+	//	fromBases = append(
+	//		fromBases,
+	//		sq.Expr("SELECT i.id "+
+	//			"FROM items i "+
+	//			"LEFT JOIN item_attributes ia ON i.id = ia.fk_item "+
+	//			"WHERE fk_label IN ?",
+	//			filter.Attributes.Origins))
+	//}
+	//if filter.Attributes.Colors != nil && len(filter.Attributes.Colors) > 0 {
+	//	fromBases = append(
+	//		fromBases,
+	//		sq.Expr("SELECT i.id "+
+	//			"FROM items i "+
+	//			"LEFT JOIN item_attributes ia ON i.id = ia.fk_item "+
+	//			"WHERE fk_label IN ?",
+	//			filter.Attributes.Colors))
+	//}
+	//if filter.Attributes.Sizes != nil && len(filter.Attributes.Sizes) > 0 {
+	//	fromBases = append(
+	//		fromBases,
+	//		sq.Expr("SELECT i.id "+
+	//			"FROM items i "+
+	//			"LEFT JOIN item_attributes ia ON i.id = ia.fk_item "+
+	//			"WHERE fk_label IN ?",
+	//			filter.Attributes.Sizes))
+	//}
+	//if filter.Attributes.Availability != nil && len(filter.Attributes.Availability) > 0 {
+	//	fromBases = append(
+	//		fromBases,
+	//		sq.Expr("SELECT i.id "+
+	//			"FROM items i "+
+	//			"LEFT JOIN item_attributes ia ON i.id = ia.fk_item "+
+	//			"WHERE fk_label IN ?",
+	//			filter.Attributes.Availability))
+	//}
+	//if filter.Attributes.Prices != nil && len(filter.Attributes.Prices) > 0 {
+	//	fromBases = append(
+	//		fromBases,
+	//		sq.Expr("SELECT i.id "+
+	//			"FROM items i "+
+	//			"LEFT JOIN item_attributes ia ON i.id = ia.fk_item "+
+	//			"WHERE fk_label IN ?",
+	//			filter.Attributes.Prices))
+	//}
 
-	if filter.Attributes.Origins != nil && len(filter.Attributes.Origins) > 0 {
-		fromBases = append(
-			fromBases,
-			sq.Expr("SELECT i.id "+
-				"FROM items i "+
-				"LEFT JOIN item_attributes ia ON i.id = ia.fk_item "+
-				"WHERE fk_label IN ?",
-				filter.Attributes.Origins))
-	}
-	if filter.Attributes.Colors != nil && len(filter.Attributes.Colors) > 0 {
-		fromBases = append(
-			fromBases,
-			sq.Expr("SELECT i.id "+
-				"FROM items i "+
-				"LEFT JOIN item_attributes ia ON i.id = ia.fk_item "+
-				"WHERE fk_label IN ?",
-				filter.Attributes.Colors))
-	}
-	if filter.Attributes.Sizes != nil && len(filter.Attributes.Sizes) > 0 {
-		fromBases = append(
-			fromBases,
-			sq.Expr("SELECT i.id "+
-				"FROM items i "+
-				"LEFT JOIN item_attributes ia ON i.id = ia.fk_item "+
-				"WHERE fk_label IN ?",
-				filter.Attributes.Sizes))
-	}
-	if filter.Attributes.Availability != nil && len(filter.Attributes.Availability) > 0 {
-		fromBases = append(
-			fromBases,
-			sq.Expr("SELECT i.id "+
-				"FROM items i "+
-				"LEFT JOIN item_attributes ia ON i.id = ia.fk_item "+
-				"WHERE fk_label IN ?",
-				filter.Attributes.Availability))
-	}
-	if filter.Attributes.Prices != nil && len(filter.Attributes.Prices) > 0 {
-		fromBases = append(
-			fromBases,
-			sq.Expr("SELECT i.id "+
-				"FROM items i "+
-				"LEFT JOIN item_attributes ia ON i.id = ia.fk_item "+
-				"WHERE fk_label IN ?",
-				filter.Attributes.Prices))
-	}
-
-	var fromBaseQueries []string
-	var fromBaseParams []interface{}
-
+	var qr string
+	var pr []interface{}
 	var err error
-	for idx, fromBase := range fromBases {
-		fromBaseQueries[idx], fromBaseParams[idx], err = fromBase.ToSql()
-		if err != nil {
-			return err
-		}
+
+	if filter.Keyword != nil {
+		qr, pr, err = sq.Expr("items i inner join (select u1.id "+
+			"from ("+
+			"select distinct i.id from items i left join item_attributes ia on i.id = ia.fk_item "+
+			"where fk_label in (?) and ia.active = true and i.active = true) as u1 inner join ("+
+			"select distinct i.id from items i left join item_attributes ia on i.id = ia.fk_item "+
+			"where fk_label in (?) and ia.active = true and i.active = true) as u2 on u1.id = u2.id) "+
+			"as ids on i.id = ids.id "+
+			"left join images img on i.fk_image_avatar = img.id "+
+			"where fk_label_color IN ? and fk_label_origin IN ? and fk_collection IN ? and match(name, search_keys) against(? in natural language mode)",
+			filter.Attributes.Sizes,
+			//filter.Attributes.Prices,
+			filter.Attributes.Availability,
+			filter.Attributes.Colors,
+			filter.Attributes.Origins,
+			filter.Collections,
+			*filter.Keyword).ToSql()
+	} else {
+		qr, pr, err = sq.Expr("items i inner join (select u1.id "+
+			"from ("+
+			"select distinct i.id from items i left join item_attributes ia on i.id = ia.fk_item "+
+			"where fk_label in (?) and ia.active = true and i.active = true) as u1 inner join ("+
+			"select distinct i.id from items i left join item_attributes ia on i.id = ia.fk_item "+
+			"where fk_label in (?) and ia.active = true and i.active = true) as u2 on u1.id = u2.id) "+
+			"as ids on i.id = ids.id "+
+			"left join images img on i.fk_image_avatar = img.id "+
+			"where fk_label_color IN ? and fk_label_origin IN ? and fk_collection IN ?",
+			filter.Attributes.Sizes,
+			//filter.Attributes.Prices,
+			filter.Attributes.Availability,
+			filter.Attributes.Colors,
+			filter.Attributes.Origins,
+			filter.Collections).ToSql()
 	}
 
-	//baseQuery := ""
-	for i := 0; i < len(fromBaseQueries); i++ {
+	countQr, _, err := sq.Select("count(distinct i.id)").From(qr).ToSql()
+	if err != nil {
+		return err
+	}
 
+	err = datastore.GetDB().WithContext(ctx).Raw(countQr, pr...).Scan(count).Error
+	if err != nil {
+		return err
+	}
+
+	if *count == 0 {
+		return nil
+	}
+
+	if filter.Page*filter.Size >= *count {
+		filter.Page = *count / filter.Page
+	}
+
+	selectQr, _, err := sq.Select("i.id, i.name, json_object('id', img.id, 'link', img.link) as avatar").
+		//Offset(uint64(filter.Page * filter.Size)).Limit(uint64(filter.Size)).
+		From(qr).ToSql()
+	if err != nil {
+		return err
+	}
+
+	err = datastore.GetDB().WithContext(ctx).Raw(selectQr, pr...).
+		Scan(listItem).Error
+	if err != nil {
+		return err
 	}
 	return nil
 }
@@ -274,23 +326,23 @@ func (i *ItemRepository) GetListDetailItem(
 	count *int,
 	listItem *[]*models.DetailItem,
 ) error {
-	listItemQuery := datastore.GetDB().WithContext(ctx).Raw("SELECT DISTINCT "+
-		"i.id, i.name, i.description, i.`order`, "+
-		"GROUP_CONCAT(JSON_OBJECT('id', l.id, 'code', l.code, 'value', l.value, 'subLabels', NULL)) as attributes, "+
-		"GROUP_CONCAT(JSON_OBJECT('id', img.id, 'link', img.link)) as images, "+
-		"JSON_OBJECT('id', c.id, 'name', c.name, 'order', c.`order`) as collection, "+
-		"ic.`order` as orderInCollection "+
-		"FROM items i "+
-		"LEFT JOIN item_collections ic ON i.id = ic.fk_item "+
-		"LEFT JOIN collections c on ic.fk_collection = c.id "+
-		"LEFT JOIN item_attributes ia on i.id = ia.fk_item "+
-		"LEFT JOIN labels l on ia.fk_label = l.id "+
-		"LEFT JOIN item_images ii on i.id = ii.fk_item "+
-		"LEFT JOIN images img on ii.fk_image = img.id "+
-		"WHERE i.active AND ic.active AND ia.active AND c.active AND l.active AND ii.active "+
-		"GROUP BY i.id, i.name, i.description, i.name, i.id, i.`order`, "+
-		"JSON_OBJECT('id', c.id, 'name', c.name, 'order', c.`order`), ic.`order` "+
-		"LIMIT ?, ?", pagination.Page*pagination.Size, pagination.Size)
+	listItemQuery := datastore.GetDB().WithContext(ctx).Raw("SELECT DISTINCT " +
+		"i.id, i.name, i.description, i.`order`, " +
+		"GROUP_CONCAT(JSON_OBJECT('id', l.id, 'code', l.code, 'value', l.value, 'subLabels', NULL)) as attributes, " +
+		"GROUP_CONCAT(JSON_OBJECT('id', img.id, 'link', img.link)) as images, " +
+		"JSON_OBJECT('id', c.id, 'name', c.name, 'order', c.`order`) as collection, " +
+		"ic.`order` as orderInCollection " +
+		"FROM items i " +
+		"LEFT JOIN item_collections ic ON i.id = ic.fk_item " +
+		"LEFT JOIN collections c on ic.fk_collection = c.id " +
+		"LEFT JOIN item_attributes ia on i.id = ia.fk_item " +
+		"LEFT JOIN labels l on ia.fk_label = l.id " +
+		"LEFT JOIN item_images ii on i.id = ii.fk_item " +
+		"LEFT JOIN images img on ii.fk_image = img.id " +
+		"WHERE i.active AND ic.active AND ia.active AND c.active AND l.active AND ii.active " +
+		"GROUP BY i.id, i.name, i.description, i.name, i.id, i.`order`, " +
+		"JSON_OBJECT('id', c.id, 'name', c.name, 'order', c.`order`), ic.`order` ")
+	//"LIMIT ?, ?", pagination.Page*pagination.Size, pagination.Size)
 
 	countItemQuery := datastore.GetDB().WithContext(ctx).Raw("SELECT " +
 		"COUNT(*) " +
@@ -323,5 +375,28 @@ func (i *ItemRepository) GetListDetailItem(
 		return err
 	}
 
+	return nil
+}
+
+func (i *ItemRepository) GetItemAttributeFilter(
+	ctx context.Context,
+	itemIDs []int,
+	filterResult *models.AttributeFilter,
+) error {
+	err := datastore.GetDB().WithContext(ctx).Raw("SELECT "+
+		"GROUP_CONCAT(DISTINCT i.fk_label_color) as colors,"+
+		"GROUP_CONCAT(DISTINCT i.fk_label_origin) as origins,"+
+		"GROUP_CONCAT(DISTINCT sz.fk_label) as sizes,"+
+		"GROUP_CONCAT(DISTINCT av.fk_label) as availability "+
+		"FROM items i "+
+		"LEFT JOIN item_attributes sz ON i.id = sz.fk_item AND sz.active = true "+
+		"LEFT JOIN item_attributes av ON i.id = av.fk_item AND av.active = true "+
+		"WHERE i.active = true AND sz.fk_label IN (SELECT labels.id from labels WHERE labels.code = 'item-size') "+
+		"AND av.fk_label IN (SELECT labels.id from labels WHERE labels.code = 'item-availability') "+
+		"AND i.id IN ?", itemIDs).Scan(filterResult).
+		Error
+	if err != nil {
+		return err
+	}
 	return nil
 }

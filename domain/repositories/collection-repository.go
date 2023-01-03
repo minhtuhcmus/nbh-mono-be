@@ -30,12 +30,12 @@ func (c *CollectionRepository) GetCollectionsInfo(
 			"c.id, " +
 			"c.name, " +
 			"c.`order`, " +
-			"count(ic.fk_item) AS totalItem " +
+			"COUNT(DISTINCT i.id) AS total " +
 			"FROM collections c " +
-			"LEFT JOIN item_collections ic " +
-			"ON ic.fk_collection=c.id " +
-			"GROUP BY c.id, c.`order` " +
-			"ORDER BY `order`").
+			"LEFT JOIN items i " +
+			"ON i.fk_collection = c.id " +
+			"GROUP BY c.id, c.name, c.`order` " +
+			"ORDER BY c.`order`").
 		Scan(collectionInfos).Error
 	if err != nil {
 		collectionInfos = nil
@@ -84,6 +84,18 @@ func (c *CollectionRepository) GetItemsInCollections(
 	if err != nil {
 		items = nil
 		return fmt.Errorf("error CollectionRepository.GetItemsInCollections %v", err)
+	}
+	return nil
+}
+
+func (c *CollectionRepository) GetAllCollectionIDs(
+	ctx context.Context,
+	collectionIDs *[]int,
+) error {
+	err := datastore.GetDB().WithContext(ctx).Raw("SELECT collections.id FROM collections WHERE active = true").
+		Scan(collectionIDs).Error
+	if err != nil {
+		return err
 	}
 	return nil
 }
