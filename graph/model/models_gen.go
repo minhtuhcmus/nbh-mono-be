@@ -3,6 +3,9 @@
 package model
 
 import (
+	"fmt"
+	"io"
+	"strconv"
 	"time"
 )
 
@@ -31,6 +34,7 @@ type DetailItem struct {
 	Images            []*OverviewImage    `json:"images"`
 	Collection        *OverviewCollection `json:"collection"`
 	OrderInCollection int                 `json:"orderInCollection"`
+	Stock             []*ItemStock        `json:"stock"`
 }
 
 type ItemAttributes struct {
@@ -39,6 +43,14 @@ type ItemAttributes struct {
 	Sizes        []*OverviewLabel `json:"sizes"`
 	Prices       []*OverviewLabel `json:"prices"`
 	Availability []*OverviewLabel `json:"availability"`
+}
+
+type ItemStock struct {
+	ID            int        `json:"id"`
+	AvailableFrom time.Time  `json:"availableFrom"`
+	Quantity      int        `json:"quantity"`
+	CreatedAt     *time.Time `json:"createdAt"`
+	UpdatedAt     *time.Time `json:"updatedAt"`
 }
 
 type ListDetailItem struct {
@@ -89,6 +101,19 @@ type NewRole struct {
 	Active      bool    `json:"active"`
 }
 
+type NewStock struct {
+	FkItem        int       `json:"fkItem"`
+	Quantity      int       `json:"quantity"`
+	AvailableFrom time.Time `json:"availableFrom"`
+}
+
+type NewStockLogs struct {
+	FkStock      int         `json:"fkStock"`
+	ChangeAmount int         `json:"changeAmount"`
+	Action       StockAction `json:"action"`
+	Note         *string     `json:"note"`
+}
+
 type NewUser struct {
 	Username    string `json:"username"`
 	Password    string `json:"password"`
@@ -114,10 +139,11 @@ type OverviewImage struct {
 }
 
 type OverviewItem struct {
-	ID     int            `json:"id"`
-	Name   string         `json:"name"`
-	Avatar *OverviewImage `json:"avatar"`
-	Price  *OverviewLabel `json:"price"`
+	ID          int            `json:"id"`
+	Name        string         `json:"name"`
+	Avatar      *OverviewImage `json:"avatar"`
+	Price       *OverviewLabel `json:"price"`
+	StockAmount *int           `json:"stockAmount"`
 }
 
 type OverviewLabel struct {
@@ -153,4 +179,45 @@ type PaginationFilter struct {
 	Size        int               `json:"size"`
 	Keyword     *string           `json:"keyword"`
 	Attributes  *AttributesFilter `json:"attributes"`
+}
+
+type StockAction string
+
+const (
+	StockActionAdd  StockAction = "add"
+	StockActionSubs StockAction = "subs"
+)
+
+var AllStockAction = []StockAction{
+	StockActionAdd,
+	StockActionSubs,
+}
+
+func (e StockAction) IsValid() bool {
+	switch e {
+	case StockActionAdd, StockActionSubs:
+		return true
+	}
+	return false
+}
+
+func (e StockAction) String() string {
+	return string(e)
+}
+
+func (e *StockAction) UnmarshalGQL(v interface{}) error {
+	str, ok := v.(string)
+	if !ok {
+		return fmt.Errorf("enums must be strings")
+	}
+
+	*e = StockAction(str)
+	if !e.IsValid() {
+		return fmt.Errorf("%s is not a valid StockAction", str)
+	}
+	return nil
+}
+
+func (e StockAction) MarshalGQL(w io.Writer) {
+	fmt.Fprint(w, strconv.Quote(e.String()))
 }

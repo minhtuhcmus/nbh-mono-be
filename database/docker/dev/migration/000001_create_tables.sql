@@ -12,6 +12,7 @@ CREATE TABLE `items` (
   name VARCHAR(80) NOT NULL UNIQUE,
   search_keys TEXT,
   description TEXT,
+  quantity INT,
   fk_label_origin INT,
   fk_collection INT,
   fk_label_color INT,
@@ -76,6 +77,30 @@ CREATE TABLE `user_roles`(
   fk_role INT,
   active BOOLEAN NOT NULL DEFAULT TRUE,
   PRIMARY KEY (`fk_user`, `fk_role`)
+)ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 AUTO_INCREMENT=1;
+
+DROP TABLE IF EXISTS `stocks`;
+CREATE TABLE `stocks`(
+  id INT AUTO_INCREMENT PRIMARY KEY,
+  fk_item INT,
+  quantity INT,
+  available_from DATETIME NOT NULL,
+  created_at DATETIME DEFAULT CURRENT_TIMESTAMP ,
+  updated_at DATETIME DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+  active BOOLEAN NOT NULL DEFAULT TRUE
+)ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 AUTO_INCREMENT=1;
+
+DROP TABLE IF EXISTS `stock_logs`;
+CREATE TABLE `stock_logs`(
+  id INT AUTO_INCREMENT PRIMARY KEY,
+  fk_stock INT,
+  fk_user INT,
+  change_amount INT,
+  action ENUM('add', 'subs'),
+  note TEXT,
+  created_at DATETIME DEFAULT CURRENT_TIMESTAMP ,
+  updated_at DATETIME DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+  active BOOLEAN NOT NULL DEFAULT TRUE
 )ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 AUTO_INCREMENT=1;
 
 --

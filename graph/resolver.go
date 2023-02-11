@@ -13,16 +13,19 @@ type Resolver struct {
 	itemService       services.ItemService
 	imageService      services.ImageService
 	collectionService services.CollectionService
+	stockService      services.StockService
 }
 
 func New(
 	itemService services.ItemService,
 	imageService services.ImageService,
 	collectionService services.CollectionService,
+	stockService services.StockService,
 ) generated.Config {
 	return generated.Config{Resolvers: &Resolver{
 		itemService:       itemService,
 		imageService:      imageService,
 		collectionService: collectionService,
+		stockService:      stockService,
 	}}
 }

@@ -22,8 +22,10 @@ type Mutation {
 #  disableLabels(labelID: Int!): Boolean!
 #  signUp(newUser: NewUser!): String!
 #  signIn(username: String!, password: String!): String!
-  item(newItem: NewItem!): OverviewItem!
+  item(id: Int, newItem: NewItem!): OverviewItem!
   images(newImage: [NewImage!]!): [OverviewImage!]!
+  stock(id: Int, newStock: NewStock!): Boolean!
+  stockLog(id: Int, newStockLog: NewStockLogs!): Boolean!
 #  user(newUser: NewUser!): OverviewUser!
 #  disableUser(userID: Int!): Boolean!
 }

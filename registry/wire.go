@@ -26,6 +26,7 @@ func InitHTTPServer(ctx context.Context) (http.Handler, error) {
 		services.NewImageService,
 		services.NewCollectionService,
 		services.NewAuthService,
+		services.NewStockService,
 
 		//repositories.NewRoleRepository,
 		repositories.NewLabelRepository,
@@ -36,6 +37,7 @@ func InitHTTPServer(ctx context.Context) (http.Handler, error) {
 		repositories.NewItemAttributeRepository,
 		repositories.NewItemImageRepository,
 		repositories.NewUserRepository,
+		repositories.NewStockRepository,
 	)
 	return nil, nil
 }

@@ -1,0 +1,17 @@
+input NewStock {
+    fkItem: Int!
+    quantity: Int!
+    availableFrom: Time!
+}
+
+enum StockAction {
+    add
+    subs
+}
+
+input NewStockLogs {
+    fkStock: Int!
+    changeAmount: Int!
+    action: StockAction!
+    note: String
+}

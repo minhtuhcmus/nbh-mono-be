@@ -62,6 +62,7 @@ type ComplexityRoot struct {
 		Name              func(childComplexity int) int
 		Order             func(childComplexity int) int
 		OrderInCollection func(childComplexity int) int
+		Stock             func(childComplexity int) int
 	}
 
 	ItemAttributes struct {
@@ -70,6 +71,14 @@ type ComplexityRoot struct {
 		Origins      func(childComplexity int) int
 		Prices       func(childComplexity int) int
 		Sizes        func(childComplexity int) int
+	}
+
+	ItemStock struct {
+		AvailableFrom func(childComplexity int) int
+		CreatedAt     func(childComplexity int) int
+		ID            func(childComplexity int) int
+		Quantity      func(childComplexity int) int
+		UpdatedAt     func(childComplexity int) int
 	}
 
 	ListDetailItem struct {
@@ -90,8 +99,10 @@ type ComplexityRoot struct {
 	}
 
 	Mutation struct {
-		Images func(childComplexity int, newImage []*model.NewImage) int
-		Item   func(childComplexity int, newItem model.NewItem) int
+		Images   func(childComplexity int, newImage []*model.NewImage) int
+		Item     func(childComplexity int, id *int, newItem model.NewItem) int
+		Stock    func(childComplexity int, id *int, newStock model.NewStock) int
+		StockLog func(childComplexity int, id *int, newStockLog model.NewStockLogs) int
 	}
 
 	NewCollection struct {
@@ -111,10 +122,11 @@ type ComplexityRoot struct {
 	}
 
 	OverviewItem struct {
-		Avatar func(childComplexity int) int
-		ID     func(childComplexity int) int
-		Name   func(childComplexity int) int
-		Price  func(childComplexity int) int
+		Avatar      func(childComplexity int) int
+		ID          func(childComplexity int) int
+		Name        func(childComplexity int) int
+		Price       func(childComplexity int) int
+		StockAmount func(childComplexity int) int
 	}
 
 	OverviewLabel struct {
@@ -153,8 +165,10 @@ type ComplexityRoot struct {
 }
 
 type MutationResolver interface {
-	Item(ctx context.Context, newItem model.NewItem) (*model.OverviewItem, error)
+	Item(ctx context.Context, id *int, newItem model.NewItem) (*model.OverviewItem, error)
 	Images(ctx context.Context, newImage []*model.NewImage) ([]*model.OverviewImage, error)
+	Stock(ctx context.Context, id *int, newStock model.NewStock) (bool, error)
+	StockLog(ctx context.Context, id *int, newStockLog model.NewStockLogs) (bool, error)
 }
 type QueryResolver interface {
 	Items(ctx context.Context, pagination model.PaginationFilter) (*model.ListItem, error)
@@ -269,6 +283,13 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 
 		return e.complexity.DetailItem.OrderInCollection(childComplexity), true
 
+	case "DetailItem.stock":
+		if e.complexity.DetailItem.Stock == nil {
+			break
+		}
+
+		return e.complexity.DetailItem.Stock(childComplexity), true
+
 	case "ItemAttributes.availability":
 		if e.complexity.ItemAttributes.Availability == nil {
 			break
@@ -303,6 +324,41 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 		}
 
 		return e.complexity.ItemAttributes.Sizes(childComplexity), true
+
+	case "ItemStock.availableFrom":
+		if e.complexity.ItemStock.AvailableFrom == nil {
+			break
+		}
+
+		return e.complexity.ItemStock.AvailableFrom(childComplexity), true
+
+	case "ItemStock.createdAt":
+		if e.complexity.ItemStock.CreatedAt == nil {
+			break
+		}
+
+		return e.complexity.ItemStock.CreatedAt(childComplexity), true
+
+	case "ItemStock.id":
+		if e.complexity.ItemStock.ID == nil {
+			break
+		}
+
+		return e.complexity.ItemStock.ID(childComplexity), true
+
+	case "ItemStock.quantity":
+		if e.complexity.ItemStock.Quantity == nil {
+			break
+		}
+
+		return e.complexity.ItemStock.Quantity(childComplexity), true
+
+	case "ItemStock.updatedAt":
+		if e.complexity.ItemStock.UpdatedAt == nil {
+			break
+		}
+
+		return e.complexity.ItemStock.UpdatedAt(childComplexity), true
 
 	case "ListDetailItem.data":
 		if e.complexity.ListDetailItem.Data == nil {
@@ -403,7 +459,31 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 			return 0, false
 		}
 
-		return e.complexity.Mutation.Item(childComplexity, args["newItem"].(model.NewItem)), true
+		return e.complexity.Mutation.Item(childComplexity, args["id"].(*int), args["newItem"].(model.NewItem)), true
+
+	case "Mutation.stock":
+		if e.complexity.Mutation.Stock == nil {
+			break
+		}
+
+		args, err := ec.field_Mutation_stock_args(context.TODO(), rawArgs)
+		if err != nil {
+			return 0, false
+		}
+
+		return e.complexity.Mutation.Stock(childComplexity, args["id"].(*int), args["newStock"].(model.NewStock)), true
+
+	case "Mutation.stockLog":
+		if e.complexity.Mutation.StockLog == nil {
+			break
+		}
+
+		args, err := ec.field_Mutation_stockLog_args(context.TODO(), rawArgs)
+		if err != nil {
+			return 0, false
+		}
+
+		return e.complexity.Mutation.StockLog(childComplexity, args["id"].(*int), args["newStockLog"].(model.NewStockLogs)), true
 
 	case "NewCollection.name":
 		if e.complexity.NewCollection.Name == nil {
@@ -481,6 +561,13 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 		}
 
 		return e.complexity.OverviewItem.Price(childComplexity), true
+
+	case "OverviewItem.stockAmount":
+		if e.complexity.OverviewItem.StockAmount == nil {
+			break
+		}
+
+		return e.complexity.OverviewItem.StockAmount(childComplexity), true
 
 	case "OverviewLabel.code":
 		if e.complexity.OverviewLabel.Code == nil {
@@ -659,6 +746,8 @@ func (e *executableSchema) Exec(ctx context.Context) graphql.ResponseHandler {
 		ec.unmarshalInputNewItem,
 		ec.unmarshalInputNewLabel,
 		ec.unmarshalInputNewRole,
+		ec.unmarshalInputNewStock,
+		ec.unmarshalInputNewStockLogs,
 		ec.unmarshalInputNewUser,
 		ec.unmarshalInputPaginationFilter,
 	)
@@ -754,6 +843,14 @@ type OverviewImage {
    type: Int
 }
 
+type ItemStock {
+   id: Int!
+   availableFrom: Time!
+   quantity: Int!
+   createdAt: Time
+   updatedAt: Time
+}
+
 type DetailItem {
    id: Int!
    name: String!
@@ -763,6 +860,7 @@ type DetailItem {
    images: [OverviewImage!]
    collection: OverviewCollection!
    orderInCollection: Int!
+   stock: [ItemStock!]
 }
 
 type OverviewItem {
@@ -770,6 +868,7 @@ type OverviewItem {
    name: String!
    avatar: OverviewImage
    price: OverviewLabel
+   stockAmount: Int
 }
 
 type NewCollection {
@@ -863,12 +962,31 @@ type Mutation {
 #  disableLabels(labelID: Int!): Boolean!
 #  signUp(newUser: NewUser!): String!
 #  signIn(username: String!, password: String!): String!
-  item(newItem: NewItem!): OverviewItem!
+  item(id: Int, newItem: NewItem!): OverviewItem!
   images(newImage: [NewImage!]!): [OverviewImage!]!
+  stock(id: Int, newStock: NewStock!): Boolean!
+  stockLog(id: Int, newStockLog: NewStockLogs!): Boolean!
 #  user(newUser: NewUser!): OverviewUser!
 #  disableUser(userID: Int!): Boolean!
 }
 `, BuiltIn: false},
+	{Name: "../schemas/stock.schema.graphqls", Input: `input NewStock {
+    fkItem: Int!
+    quantity: Int!
+    availableFrom: Time!
+}
+
+enum StockAction {
+    add
+    subs
+}
+
+input NewStockLogs {
+    fkStock: Int!
+    changeAmount: Int!
+    action: StockAction!
+    note: String
+}`, BuiltIn: false},
 	{Name: "../schemas/user.schema.graphqls", Input: `type OverviewUser {
   id: Int!
   username: String!
@@ -919,15 +1037,72 @@ func (ec *executionContext) field_Mutation_images_args(ctx context.Context, rawA
 func (ec *executionContext) field_Mutation_item_args(ctx context.Context, rawArgs map[string]interface{}) (map[string]interface{}, error) {
 	var err error
 	args := map[string]interface{}{}
-	var arg0 model.NewItem
-	if tmp, ok := rawArgs["newItem"]; ok {
-		ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("newItem"))
-		arg0, err = ec.unmarshalNNewItem2githubᚗcomᚋminhtuhcmusᚋnbhᚑmonoᚑbeᚋgraphᚋmodelᚐNewItem(ctx, tmp)
+	var arg0 *int
+	if tmp, ok := rawArgs["id"]; ok {
+		ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("id"))
+		arg0, err = ec.unmarshalOInt2ᚖint(ctx, tmp)
 		if err != nil {
 			return nil, err
 		}
 	}
-	args["newItem"] = arg0
+	args["id"] = arg0
+	var arg1 model.NewItem
+	if tmp, ok := rawArgs["newItem"]; ok {
+		ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("newItem"))
+		arg1, err = ec.unmarshalNNewItem2githubᚗcomᚋminhtuhcmusᚋnbhᚑmonoᚑbeᚋgraphᚋmodelᚐNewItem(ctx, tmp)
+		if err != nil {
+			return nil, err
+		}
+	}
+	args["newItem"] = arg1
+	return args, nil
+}
+
+func (ec *executionContext) field_Mutation_stockLog_args(ctx context.Context, rawArgs map[string]interface{}) (map[string]interface{}, error) {
+	var err error
+	args := map[string]interface{}{}
+	var arg0 *int
+	if tmp, ok := rawArgs["id"]; ok {
+		ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("id"))
+		arg0, err = ec.unmarshalOInt2ᚖint(ctx, tmp)
+		if err != nil {
+			return nil, err
+		}
+	}
+	args["id"] = arg0
+	var arg1 model.NewStockLogs
+	if tmp, ok := rawArgs["newStockLog"]; ok {
+		ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("newStockLog"))
+		arg1, err = ec.unmarshalNNewStockLogs2githubᚗcomᚋminhtuhcmusᚋnbhᚑmonoᚑbeᚋgraphᚋmodelᚐNewStockLogs(ctx, tmp)
+		if err != nil {
+			return nil, err
+		}
+	}
+	args["newStockLog"] = arg1
+	return args, nil
+}
+
+func (ec *executionContext) field_Mutation_stock_args(ctx context.Context, rawArgs map[string]interface{}) (map[string]interface{}, error) {
+	var err error
+	args := map[string]interface{}{}
+	var arg0 *int
+	if tmp, ok := rawArgs["id"]; ok {
+		ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("id"))
+		arg0, err = ec.unmarshalOInt2ᚖint(ctx, tmp)
+		if err != nil {
+			return nil, err
+		}
+	}
+	args["id"] = arg0
+	var arg1 model.NewStock
+	if tmp, ok := rawArgs["newStock"]; ok {
+		ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("newStock"))
+		arg1, err = ec.unmarshalNNewStock2githubᚗcomᚋminhtuhcmusᚋnbhᚑmonoᚑbeᚋgraphᚋmodelᚐNewStock(ctx, tmp)
+		if err != nil {
+			return nil, err
+		}
+	}
+	args["newStock"] = arg1
 	return args, nil
 }
 
@@ -1588,6 +1763,59 @@ func (ec *executionContext) fieldContext_DetailItem_orderInCollection(ctx contex
 	return fc, nil
 }
 
+func (ec *executionContext) _DetailItem_stock(ctx context.Context, field graphql.CollectedField, obj *model.DetailItem) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_DetailItem_stock(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.Stock, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		return graphql.Null
+	}
+	res := resTmp.([]*model.ItemStock)
+	fc.Result = res
+	return ec.marshalOItemStock2ᚕᚖgithubᚗcomᚋminhtuhcmusᚋnbhᚑmonoᚑbeᚋgraphᚋmodelᚐItemStockᚄ(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_DetailItem_stock(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "DetailItem",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			switch field.Name {
+			case "id":
+				return ec.fieldContext_ItemStock_id(ctx, field)
+			case "availableFrom":
+				return ec.fieldContext_ItemStock_availableFrom(ctx, field)
+			case "quantity":
+				return ec.fieldContext_ItemStock_quantity(ctx, field)
+			case "createdAt":
+				return ec.fieldContext_ItemStock_createdAt(ctx, field)
+			case "updatedAt":
+				return ec.fieldContext_ItemStock_updatedAt(ctx, field)
+			}
+			return nil, fmt.Errorf("no field named %q was found under type ItemStock", field.Name)
+		},
+	}
+	return fc, nil
+}
+
 func (ec *executionContext) _ItemAttributes_colors(ctx context.Context, field graphql.CollectedField, obj *model.ItemAttributes) (ret graphql.Marshaler) {
 	fc, err := ec.fieldContext_ItemAttributes_colors(ctx, field)
 	if err != nil {
@@ -1843,6 +2071,220 @@ func (ec *executionContext) fieldContext_ItemAttributes_availability(ctx context
 	return fc, nil
 }
 
+func (ec *executionContext) _ItemStock_id(ctx context.Context, field graphql.CollectedField, obj *model.ItemStock) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_ItemStock_id(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.ID, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.(int)
+	fc.Result = res
+	return ec.marshalNInt2int(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_ItemStock_id(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "ItemStock",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type Int does not have child fields")
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _ItemStock_availableFrom(ctx context.Context, field graphql.CollectedField, obj *model.ItemStock) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_ItemStock_availableFrom(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.AvailableFrom, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.(time.Time)
+	fc.Result = res
+	return ec.marshalNTime2timeᚐTime(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_ItemStock_availableFrom(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "ItemStock",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type Time does not have child fields")
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _ItemStock_quantity(ctx context.Context, field graphql.CollectedField, obj *model.ItemStock) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_ItemStock_quantity(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.Quantity, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.(int)
+	fc.Result = res
+	return ec.marshalNInt2int(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_ItemStock_quantity(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "ItemStock",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type Int does not have child fields")
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _ItemStock_createdAt(ctx context.Context, field graphql.CollectedField, obj *model.ItemStock) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_ItemStock_createdAt(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.CreatedAt, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		return graphql.Null
+	}
+	res := resTmp.(*time.Time)
+	fc.Result = res
+	return ec.marshalOTime2ᚖtimeᚐTime(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_ItemStock_createdAt(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "ItemStock",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type Time does not have child fields")
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _ItemStock_updatedAt(ctx context.Context, field graphql.CollectedField, obj *model.ItemStock) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_ItemStock_updatedAt(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.UpdatedAt, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		return graphql.Null
+	}
+	res := resTmp.(*time.Time)
+	fc.Result = res
+	return ec.marshalOTime2ᚖtimeᚐTime(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_ItemStock_updatedAt(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "ItemStock",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type Time does not have child fields")
+		},
+	}
+	return fc, nil
+}
+
 func (ec *executionContext) _ListDetailItem_data(ctx context.Context, field graphql.CollectedField, obj *model.ListDetailItem) (ret graphql.Marshaler) {
 	fc, err := ec.fieldContext_ListDetailItem_data(ctx, field)
 	if err != nil {
@@ -1895,6 +2337,8 @@ func (ec *executionContext) fieldContext_ListDetailItem_data(ctx context.Context
 				return ec.fieldContext_DetailItem_collection(ctx, field)
 			case "orderInCollection":
 				return ec.fieldContext_DetailItem_orderInCollection(ctx, field)
+			case "stock":
+				return ec.fieldContext_DetailItem_stock(ctx, field)
 			}
 			return nil, fmt.Errorf("no field named %q was found under type DetailItem", field.Name)
 		},
@@ -2122,6 +2566,8 @@ func (ec *executionContext) fieldContext_ListItem_data(ctx context.Context, fiel
 				return ec.fieldContext_OverviewItem_avatar(ctx, field)
 			case "price":
 				return ec.fieldContext_OverviewItem_price(ctx, field)
+			case "stockAmount":
+				return ec.fieldContext_OverviewItem_stockAmount(ctx, field)
 			}
 			return nil, fmt.Errorf("no field named %q was found under type OverviewItem", field.Name)
 		},
@@ -2375,7 +2821,7 @@ func (ec *executionContext) _Mutation_item(ctx context.Context, field graphql.Co
 	}()
 	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
 		ctx = rctx // use context from middleware stack in children
-		return ec.resolvers.Mutation().Item(rctx, fc.Args["newItem"].(model.NewItem))
+		return ec.resolvers.Mutation().Item(rctx, fc.Args["id"].(*int), fc.Args["newItem"].(model.NewItem))
 	})
 	if err != nil {
 		ec.Error(ctx, err)
@@ -2408,6 +2854,8 @@ func (ec *executionContext) fieldContext_Mutation_item(ctx context.Context, fiel
 				return ec.fieldContext_OverviewItem_avatar(ctx, field)
 			case "price":
 				return ec.fieldContext_OverviewItem_price(ctx, field)
+			case "stockAmount":
+				return ec.fieldContext_OverviewItem_stockAmount(ctx, field)
 			}
 			return nil, fmt.Errorf("no field named %q was found under type OverviewItem", field.Name)
 		},
@@ -2481,6 +2929,116 @@ func (ec *executionContext) fieldContext_Mutation_images(ctx context.Context, fi
 	}()
 	ctx = graphql.WithFieldContext(ctx, fc)
 	if fc.Args, err = ec.field_Mutation_images_args(ctx, field.ArgumentMap(ec.Variables)); err != nil {
+		ec.Error(ctx, err)
+		return
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _Mutation_stock(ctx context.Context, field graphql.CollectedField) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_Mutation_stock(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return ec.resolvers.Mutation().Stock(rctx, fc.Args["id"].(*int), fc.Args["newStock"].(model.NewStock))
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.(bool)
+	fc.Result = res
+	return ec.marshalNBoolean2bool(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_Mutation_stock(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "Mutation",
+		Field:      field,
+		IsMethod:   true,
+		IsResolver: true,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type Boolean does not have child fields")
+		},
+	}
+	defer func() {
+		if r := recover(); r != nil {
+			err = ec.Recover(ctx, r)
+			ec.Error(ctx, err)
+		}
+	}()
+	ctx = graphql.WithFieldContext(ctx, fc)
+	if fc.Args, err = ec.field_Mutation_stock_args(ctx, field.ArgumentMap(ec.Variables)); err != nil {
+		ec.Error(ctx, err)
+		return
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _Mutation_stockLog(ctx context.Context, field graphql.CollectedField) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_Mutation_stockLog(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return ec.resolvers.Mutation().StockLog(rctx, fc.Args["id"].(*int), fc.Args["newStockLog"].(model.NewStockLogs))
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.(bool)
+	fc.Result = res
+	return ec.marshalNBoolean2bool(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_Mutation_stockLog(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "Mutation",
+		Field:      field,
+		IsMethod:   true,
+		IsResolver: true,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type Boolean does not have child fields")
+		},
+	}
+	defer func() {
+		if r := recover(); r != nil {
+			err = ec.Recover(ctx, r)
+			ec.Error(ctx, err)
+		}
+	}()
+	ctx = graphql.WithFieldContext(ctx, fc)
+	if fc.Args, err = ec.field_Mutation_stockLog_args(ctx, field.ArgumentMap(ec.Variables)); err != nil {
 		ec.Error(ctx, err)
 		return
 	}
@@ -2976,6 +3534,47 @@ func (ec *executionContext) fieldContext_OverviewItem_price(ctx context.Context,
 				return ec.fieldContext_OverviewLabel_subLabels(ctx, field)
 			}
 			return nil, fmt.Errorf("no field named %q was found under type OverviewLabel", field.Name)
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _OverviewItem_stockAmount(ctx context.Context, field graphql.CollectedField, obj *model.OverviewItem) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_OverviewItem_stockAmount(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.StockAmount, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		return graphql.Null
+	}
+	res := resTmp.(*int)
+	fc.Result = res
+	return ec.marshalOInt2ᚖint(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_OverviewItem_stockAmount(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "OverviewItem",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type Int does not have child fields")
 		},
 	}
 	return fc, nil
@@ -6207,6 +6806,102 @@ func (ec *executionContext) unmarshalInputNewRole(ctx context.Context, obj inter
 	return it, nil
 }
 
+func (ec *executionContext) unmarshalInputNewStock(ctx context.Context, obj interface{}) (model.NewStock, error) {
+	var it model.NewStock
+	asMap := map[string]interface{}{}
+	for k, v := range obj.(map[string]interface{}) {
+		asMap[k] = v
+	}
+
+	fieldsInOrder := [...]string{"fkItem", "quantity", "availableFrom"}
+	for _, k := range fieldsInOrder {
+		v, ok := asMap[k]
+		if !ok {
+			continue
+		}
+		switch k {
+		case "fkItem":
+			var err error
+
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("fkItem"))
+			it.FkItem, err = ec.unmarshalNInt2int(ctx, v)
+			if err != nil {
+				return it, err
+			}
+		case "quantity":
+			var err error
+
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("quantity"))
+			it.Quantity, err = ec.unmarshalNInt2int(ctx, v)
+			if err != nil {
+				return it, err
+			}
+		case "availableFrom":
+			var err error
+
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("availableFrom"))
+			it.AvailableFrom, err = ec.unmarshalNTime2timeᚐTime(ctx, v)
+			if err != nil {
+				return it, err
+			}
+		}
+	}
+
+	return it, nil
+}
+
+func (ec *executionContext) unmarshalInputNewStockLogs(ctx context.Context, obj interface{}) (model.NewStockLogs, error) {
+	var it model.NewStockLogs
+	asMap := map[string]interface{}{}
+	for k, v := range obj.(map[string]interface{}) {
+		asMap[k] = v
+	}
+
+	fieldsInOrder := [...]string{"fkStock", "changeAmount", "action", "note"}
+	for _, k := range fieldsInOrder {
+		v, ok := asMap[k]
+		if !ok {
+			continue
+		}
+		switch k {
+		case "fkStock":
+			var err error
+
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("fkStock"))
+			it.FkStock, err = ec.unmarshalNInt2int(ctx, v)
+			if err != nil {
+				return it, err
+			}
+		case "changeAmount":
+			var err error
+
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("changeAmount"))
+			it.ChangeAmount, err = ec.unmarshalNInt2int(ctx, v)
+			if err != nil {
+				return it, err
+			}
+		case "action":
+			var err error
+
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("action"))
+			it.Action, err = ec.unmarshalNStockAction2githubᚗcomᚋminhtuhcmusᚋnbhᚑmonoᚑbeᚋgraphᚋmodelᚐStockAction(ctx, v)
+			if err != nil {
+				return it, err
+			}
+		case "note":
+			var err error
+
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("note"))
+			it.Note, err = ec.unmarshalOString2ᚖstring(ctx, v)
+			if err != nil {
+				return it, err
+			}
+		}
+	}
+
+	return it, nil
+}
+
 func (ec *executionContext) unmarshalInputNewUser(ctx context.Context, obj interface{}) (model.NewUser, error) {
 	var it model.NewUser
 	asMap := map[string]interface{}{}
@@ -6465,6 +7160,10 @@ func (ec *executionContext) _DetailItem(ctx context.Context, sel ast.SelectionSe
 			if out.Values[i] == graphql.Null {
 				invalids++
 			}
+		case "stock":
+
+			out.Values[i] = ec._DetailItem_stock(ctx, field, obj)
+
 		default:
 			panic("unknown field " + strconv.Quote(field.Name))
 		}
@@ -6505,6 +7204,56 @@ func (ec *executionContext) _ItemAttributes(ctx context.Context, sel ast.Selecti
 		case "availability":
 
 			out.Values[i] = ec._ItemAttributes_availability(ctx, field, obj)
+
+		default:
+			panic("unknown field " + strconv.Quote(field.Name))
+		}
+	}
+	out.Dispatch()
+	if invalids > 0 {
+		return graphql.Null
+	}
+	return out
+}
+
+var itemStockImplementors = []string{"ItemStock"}
+
+func (ec *executionContext) _ItemStock(ctx context.Context, sel ast.SelectionSet, obj *model.ItemStock) graphql.Marshaler {
+	fields := graphql.CollectFields(ec.OperationContext, sel, itemStockImplementors)
+	out := graphql.NewFieldSet(fields)
+	var invalids uint32
+	for i, field := range fields {
+		switch field.Name {
+		case "__typename":
+			out.Values[i] = graphql.MarshalString("ItemStock")
+		case "id":
+
+			out.Values[i] = ec._ItemStock_id(ctx, field, obj)
+
+			if out.Values[i] == graphql.Null {
+				invalids++
+			}
+		case "availableFrom":
+
+			out.Values[i] = ec._ItemStock_availableFrom(ctx, field, obj)
+
+			if out.Values[i] == graphql.Null {
+				invalids++
+			}
+		case "quantity":
+
+			out.Values[i] = ec._ItemStock_quantity(ctx, field, obj)
+
+			if out.Values[i] == graphql.Null {
+				invalids++
+			}
+		case "createdAt":
+
+			out.Values[i] = ec._ItemStock_createdAt(ctx, field, obj)
+
+		case "updatedAt":
+
+			out.Values[i] = ec._ItemStock_updatedAt(ctx, field, obj)
 
 		default:
 			panic("unknown field " + strconv.Quote(field.Name))
@@ -6667,6 +7416,24 @@ func (ec *executionContext) _Mutation(ctx context.Context, sel ast.SelectionSet)
 			if out.Values[i] == graphql.Null {
 				invalids++
 			}
+		case "stock":
+
+			out.Values[i] = ec.OperationContext.RootResolverMiddleware(innerCtx, func(ctx context.Context) (res graphql.Marshaler) {
+				return ec._Mutation_stock(ctx, field)
+			})
+
+			if out.Values[i] == graphql.Null {
+				invalids++
+			}
+		case "stockLog":
+
+			out.Values[i] = ec.OperationContext.RootResolverMiddleware(innerCtx, func(ctx context.Context) (res graphql.Marshaler) {
+				return ec._Mutation_stockLog(ctx, field)
+			})
+
+			if out.Values[i] == graphql.Null {
+				invalids++
+			}
 		default:
 			panic("unknown field " + strconv.Quote(field.Name))
 		}
@@ -6821,6 +7588,10 @@ func (ec *executionContext) _OverviewItem(ctx context.Context, sel ast.Selection
 		case "price":
 
 			out.Values[i] = ec._OverviewItem_price(ctx, field, obj)
+
+		case "stockAmount":
+
+			out.Values[i] = ec._OverviewItem_stockAmount(ctx, field, obj)
 
 		default:
 			panic("unknown field " + strconv.Quote(field.Name))
@@ -7512,6 +8283,16 @@ func (ec *executionContext) marshalNInt2int(ctx context.Context, sel ast.Selecti
 	return res
 }
 
+func (ec *executionContext) marshalNItemStock2ᚖgithubᚗcomᚋminhtuhcmusᚋnbhᚑmonoᚑbeᚋgraphᚋmodelᚐItemStock(ctx context.Context, sel ast.SelectionSet, v *model.ItemStock) graphql.Marshaler {
+	if v == nil {
+		if !graphql.HasFieldError(ctx, graphql.GetFieldContext(ctx)) {
+			ec.Errorf(ctx, "the requested element is null which the schema does not allow")
+		}
+		return graphql.Null
+	}
+	return ec._ItemStock(ctx, sel, v)
+}
+
 func (ec *executionContext) marshalNListDetailItem2githubᚗcomᚋminhtuhcmusᚋnbhᚑmonoᚑbeᚋgraphᚋmodelᚐListDetailItem(ctx context.Context, sel ast.SelectionSet, v model.ListDetailItem) graphql.Marshaler {
 	return ec._ListDetailItem(ctx, sel, &v)
 }
@@ -7564,6 +8345,16 @@ func (ec *executionContext) unmarshalNNewImage2ᚖgithubᚗcomᚋminhtuhcmusᚋn
 
 func (ec *executionContext) unmarshalNNewItem2githubᚗcomᚋminhtuhcmusᚋnbhᚑmonoᚑbeᚋgraphᚋmodelᚐNewItem(ctx context.Context, v interface{}) (model.NewItem, error) {
 	res, err := ec.unmarshalInputNewItem(ctx, v)
+	return res, graphql.ErrorOnPath(ctx, err)
+}
+
+func (ec *executionContext) unmarshalNNewStock2githubᚗcomᚋminhtuhcmusᚋnbhᚑmonoᚑbeᚋgraphᚋmodelᚐNewStock(ctx context.Context, v interface{}) (model.NewStock, error) {
+	res, err := ec.unmarshalInputNewStock(ctx, v)
+	return res, graphql.ErrorOnPath(ctx, err)
+}
+
+func (ec *executionContext) unmarshalNNewStockLogs2githubᚗcomᚋminhtuhcmusᚋnbhᚑmonoᚑbeᚋgraphᚋmodelᚐNewStockLogs(ctx context.Context, v interface{}) (model.NewStockLogs, error) {
+	res, err := ec.unmarshalInputNewStockLogs(ctx, v)
 	return res, graphql.ErrorOnPath(ctx, err)
 }
 
@@ -7668,6 +8459,16 @@ func (ec *executionContext) marshalNOverviewRole2ᚖgithubᚗcomᚋminhtuhcmus�
 func (ec *executionContext) unmarshalNPaginationFilter2githubᚗcomᚋminhtuhcmusᚋnbhᚑmonoᚑbeᚋgraphᚋmodelᚐPaginationFilter(ctx context.Context, v interface{}) (model.PaginationFilter, error) {
 	res, err := ec.unmarshalInputPaginationFilter(ctx, v)
 	return res, graphql.ErrorOnPath(ctx, err)
+}
+
+func (ec *executionContext) unmarshalNStockAction2githubᚗcomᚋminhtuhcmusᚋnbhᚑmonoᚑbeᚋgraphᚋmodelᚐStockAction(ctx context.Context, v interface{}) (model.StockAction, error) {
+	var res model.StockAction
+	err := res.UnmarshalGQL(v)
+	return res, graphql.ErrorOnPath(ctx, err)
+}
+
+func (ec *executionContext) marshalNStockAction2githubᚗcomᚋminhtuhcmusᚋnbhᚑmonoᚑbeᚋgraphᚋmodelᚐStockAction(ctx context.Context, sel ast.SelectionSet, v model.StockAction) graphql.Marshaler {
+	return v
 }
 
 func (ec *executionContext) unmarshalNString2string(ctx context.Context, v interface{}) (string, error) {
@@ -8095,6 +8896,53 @@ func (ec *executionContext) marshalOItemAttributes2ᚖgithubᚗcomᚋminhtuhcmus
 	return ec._ItemAttributes(ctx, sel, v)
 }
 
+func (ec *executionContext) marshalOItemStock2ᚕᚖgithubᚗcomᚋminhtuhcmusᚋnbhᚑmonoᚑbeᚋgraphᚋmodelᚐItemStockᚄ(ctx context.Context, sel ast.SelectionSet, v []*model.ItemStock) graphql.Marshaler {
+	if v == nil {
+		return graphql.Null
+	}
+	ret := make(graphql.Array, len(v))
+	var wg sync.WaitGroup
+	isLen1 := len(v) == 1
+	if !isLen1 {
+		wg.Add(len(v))
+	}
+	for i := range v {
+		i := i
+		fc := &graphql.FieldContext{
+			Index:  &i,
+			Result: &v[i],
+		}
+		ctx := graphql.WithFieldContext(ctx, fc)
+		f := func(i int) {
+			defer func() {
+				if r := recover(); r != nil {
+					ec.Error(ctx, ec.Recover(ctx, r))
+					ret = nil
+				}
+			}()
+			if !isLen1 {
+				defer wg.Done()
+			}
+			ret[i] = ec.marshalNItemStock2ᚖgithubᚗcomᚋminhtuhcmusᚋnbhᚑmonoᚑbeᚋgraphᚋmodelᚐItemStock(ctx, sel, v[i])
+		}
+		if isLen1 {
+			f(i)
+		} else {
+			go f(i)
+		}
+
+	}
+	wg.Wait()
+
+	for _, e := range ret {
+		if e == graphql.Null {
+			return graphql.Null
+		}
+	}
+
+	return ret
+}
+
 func (ec *executionContext) marshalOOverviewCollection2ᚕᚖgithubᚗcomᚋminhtuhcmusᚋnbhᚑmonoᚑbeᚋgraphᚋmodelᚐOverviewCollectionᚄ(ctx context.Context, sel ast.SelectionSet, v []*model.OverviewCollection) graphql.Marshaler {
 	if v == nil {
 		return graphql.Null
@@ -8310,6 +9158,22 @@ func (ec *executionContext) marshalOString2ᚖstring(ctx context.Context, sel as
 		return graphql.Null
 	}
 	res := graphql.MarshalString(*v)
+	return res
+}
+
+func (ec *executionContext) unmarshalOTime2ᚖtimeᚐTime(ctx context.Context, v interface{}) (*time.Time, error) {
+	if v == nil {
+		return nil, nil
+	}
+	res, err := graphql.UnmarshalTime(v)
+	return &res, graphql.ErrorOnPath(ctx, err)
+}
+
+func (ec *executionContext) marshalOTime2ᚖtimeᚐTime(ctx context.Context, sel ast.SelectionSet, v *time.Time) graphql.Marshaler {
+	if v == nil {
+		return graphql.Null
+	}
+	res := graphql.MarshalTime(*v)
 	return res
 }
 

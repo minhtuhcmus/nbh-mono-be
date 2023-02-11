@@ -49,6 +49,7 @@ func NewHTTPServer(
 	imageService services.ImageService,
 	collectionService services.CollectionService,
 	authService services.AuthService,
+	stockService services.StockService,
 ) http.Handler {
 	conf := config.GetConfig()
 
@@ -66,6 +67,7 @@ func NewHTTPServer(
 					itemService,
 					imageService,
 					collectionService,
+					stockService,
 				)))
 
 		srv.AddTransport(&transport.Websocket{

@@ -8,7 +8,9 @@ import (
 	"github.com/minhtuhcmus/nbh-mono-be/domain/models"
 	"github.com/minhtuhcmus/nbh-mono-be/domain/repositories"
 	"github.com/minhtuhcmus/nbh-mono-be/graph/model"
+	"github.com/minhtuhcmus/nbh-mono-be/utils"
 	"sort"
+	"time"
 )
 
 type ItemService interface {
@@ -27,6 +29,7 @@ type itemService struct {
 	itemAttributeRepository  *repositories.ItemAttributeRepository
 	itemImageRepository      *repositories.ItemImageRepository
 	itemCollectionRepository *repositories.ItemCollectionRepository
+	stockRepository          *repositories.StockRepository
 }
 
 func (i itemService) GetAllItemAttribute(ctx context.Context) (*model.ItemAttributes, error) {
@@ -278,6 +281,17 @@ func (i itemService) GetItems(ctx context.Context, filter *model.PaginationFilte
 
 	//var itemIds []int
 	//
+
+	var stockAmountList []models.StockAmount
+	if err = i.stockRepository.GetStockLogsAvailableOn(ctx, time.Now(), &stockAmountList); err != nil {
+		return nil, err
+	}
+
+	stockAmountMap := map[int]int{}
+	for _, sa := range stockAmountList {
+		stockAmountMap[sa.FkItem] = sa.AvailableStock
+	}
+
 	for _, it := range overviewItems {
 		//itemIds = append(itemIds, it.ID)
 		var imageRaw model.OverviewImage
@@ -288,10 +302,11 @@ func (i itemService) GetItems(ctx context.Context, filter *model.PaginationFilte
 			}
 		}
 		listItem.Data = append(listItem.Data, &model.OverviewItem{
-			ID:     it.ID,
-			Name:   it.Name,
-			Avatar: &imageRaw,
-			Price:  nil,
+			ID:          it.ID,
+			Name:        it.Name,
+			Avatar:      &imageRaw,
+			Price:       nil,
+			StockAmount: utils.ToPointerInt(stockAmountMap[it.ID]),
 		})
 	}
 
@@ -451,6 +466,7 @@ func NewItemService(
 	labelRepository *repositories.LabelRepository,
 	itemAttributeRepository *repositories.ItemAttributeRepository,
 	itemImageRepository *repositories.ItemImageRepository,
+	stockRepository *repositories.StockRepository,
 ) ItemService {
 	return &itemService{
 		itemRepository:          itemRepository,
@@ -458,5 +474,6 @@ func NewItemService(
 		labelRepository:         labelRepository,
 		itemAttributeRepository: itemAttributeRepository,
 		itemImageRepository:     itemImageRepository,
+		stockRepository:         stockRepository,
 	}
 }

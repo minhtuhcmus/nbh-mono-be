@@ -12,7 +12,7 @@ import (
 )
 
 // Item is the resolver for the item field.
-func (r *mutationResolver) Item(ctx context.Context, newItem model.NewItem) (*model.OverviewItem, error) {
+func (r *mutationResolver) Item(ctx context.Context, id *int, newItem model.NewItem) (*model.OverviewItem, error) {
 	item, err := r.itemService.CreateItem(ctx, &newItem)
 	if err != nil {
 		return nil, err
@@ -27,6 +27,28 @@ func (r *mutationResolver) Images(ctx context.Context, newImage []*model.NewImag
 		return nil, err
 	}
 	return images, nil
+}
+
+// Stock is the resolver for the stock field.
+func (r *mutationResolver) Stock(ctx context.Context, id *int, newStock model.NewStock) (bool, error) {
+	if id != nil {
+		return false, nil
+	}
+	if err := r.stockService.SaveStock(ctx, id, newStock); err != nil {
+		return false, err
+	}
+	return true, nil
+}
+
+// StockLog is the resolver for the stockLog field.
+func (r *mutationResolver) StockLog(ctx context.Context, id *int, newStockLog model.NewStockLogs) (bool, error) {
+	if id != nil {
+		return false, nil
+	}
+	if err := r.stockService.CreateStockLogs(ctx, newStockLog); err != nil {
+		return false, err
+	}
+	return true, nil
 }
 
 // Items is the resolver for the items field.

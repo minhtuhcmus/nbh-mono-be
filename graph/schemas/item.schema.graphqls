@@ -8,6 +8,14 @@ input NewItem {
    type: Int
 }
 
+type ItemStock {
+   id: Int!
+   availableFrom: Time!
+   quantity: Int!
+   createdAt: Time
+   updatedAt: Time
+}
+
 type DetailItem {
    id: Int!
    name: String!
@@ -17,6 +25,7 @@ type DetailItem {
    images: [OverviewImage!]
    collection: OverviewCollection!
    orderInCollection: Int!
+   stock: [ItemStock!]
 }
 
 type OverviewItem {
@@ -24,6 +33,7 @@ type OverviewItem {
    name: String!
    avatar: OverviewImage
    price: OverviewLabel
+   stockAmount: Int
 }
 
 type NewCollection {
