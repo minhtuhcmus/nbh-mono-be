@@ -18,6 +18,7 @@ cors:
   allowed_origins:
     - http://localhost:3000
     - http://127.0.0.1:3000
+    - https://1d27-115-77-20-235.ap.ngrok.io
   allowed_methods:
     - GET
     - POST
